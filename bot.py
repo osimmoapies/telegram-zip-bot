@@ -64,13 +64,22 @@ def get_session(user_id, lang_hint=None):
             "files": [],
             "params": {},
             "collect_msg_id": None,
+            "panel_task": None,
             "dir": BASE_DIR / str(user_id),
         }
         sessions[user_id] = s
     return s
 
 
+def _cancel_panel(s):
+    task = s.get("panel_task")
+    if task and not task.done():
+        task.cancel()
+    s["panel_task"] = None
+
+
 def reset_job(s):
+    _cancel_panel(s)
     s["op"] = None
     s["files"] = []
     s["params"] = {}
@@ -299,14 +308,19 @@ async def cb_opt(cb: CallbackQuery):
 
 async def _enter_collect(cb: CallbackQuery, s, op):
     s["view"] = "collect"
+    lang = s["lang"]
     multi = op["input"] in C.MULTI_INPUTS
-    await _safe_edit(cb, prompt_for(s["lang"], op["input"]), kb_collect(s["lang"], multi))
+    text = prompt_for(lang, op["input"])
+    if op["input"] not in C.TEXT_INPUTS:
+        text += "\n\n" + t(lang, "name_hint")
+    await _safe_edit(cb, text, kb_collect(lang, multi))
     s["collect_msg_id"] = cb.message.message_id
 
 
 @dp.callback_query(F.data == "clear")
 async def cb_clear(cb: CallbackQuery):
     s = get_session(cb.from_user.id)
+    _cancel_panel(s)
     for p in s["files"]:
         try:
             Path(p).unlink(missing_ok=True)
@@ -315,13 +329,19 @@ async def cb_clear(cb: CallbackQuery):
     s["files"] = []
     op = C.OP_BY_ID.get(s.get("op"))
     if op:
-        await _safe_edit(cb, prompt_for(s["lang"], op["input"]), kb_collect(s["lang"], True))
+        lang = s["lang"]
+        text = prompt_for(lang, op["input"])
+        if op["input"] not in C.TEXT_INPUTS:
+            text += "\n\n" + t(lang, "name_hint")
+        await _safe_edit(cb, text, kb_collect(lang, True))
+        s["collect_msg_id"] = cb.message.message_id
     await cb.answer(t(s["lang"], "cleared"))
 
 
 @dp.callback_query(F.data == "run")
 async def cb_run(cb: CallbackQuery):
     s = get_session(cb.from_user.id)
+    _cancel_panel(s)
     await cb.answer()
     await run_current(cb.message, s)
 
@@ -389,7 +409,24 @@ def _accepts(op_input, kind):
 def _safe_name(name):
     name = Path(name).name
     keep = "".join(c for c in name if c.isalnum() or c in "._- ")
-    return keep or "file"
+    return keep.strip() or "file"
+
+
+def _apply_name(path: Path, outname):
+    """Rename the result to the user's chosen name, keeping the real extension."""
+    ext = path.suffix
+    base = _safe_name(outname)
+    if "." in base:
+        base = base.rsplit(".", 1)[0]
+    base = base.strip()
+    if not base:
+        return path
+    new_path = path.with_name(base + ext)
+    try:
+        path.rename(new_path)
+        return new_path
+    except Exception:
+        return path
 
 
 @dp.message(F.photo | F.document | F.video | F.audio | F.voice)
@@ -420,7 +457,7 @@ async def on_media(message: Message):
         return
     s["files"].append(dest)
     if op["input"] in C.MULTI_INPUTS:
-        await _update_counter(message, s)
+        _schedule_panel(message, s)
     else:
         await run_current(message, s)
 
@@ -429,27 +466,50 @@ async def on_media(message: Message):
 async def on_text(message: Message):
     s = get_session(message.from_user.id, detect_lang(message.from_user.language_code))
     op = C.OP_BY_ID.get(s.get("op"))
-    if s.get("view") == "collect" and op and op["input"] == "text":
-        s["params"]["text"] = message.text
-        await run_current(message, s)
-    else:
-        await open_menu(message, s)
+    if s.get("view") == "collect" and op:
+        if op["input"] == "text":
+            s["params"]["text"] = message.text
+            await run_current(message, s)
+        else:
+            # any text while collecting = custom output file name
+            raw = (message.text or "").strip()
+            if 0 < len(raw) <= 60:
+                name = _safe_name(raw)
+                if "." in name:
+                    name = name.rsplit(".", 1)[0]
+                if name:
+                    s["params"]["outname"] = name
+                    await message.answer(t(s["lang"], "name_set", name=html.escape(name)))
+        return
+    await open_menu(message, s)
 
 
-async def _update_counter(message: Message, s):
+def _schedule_panel(message: Message, s):
+    """Debounced: re-post the Done/Clear panel at the bottom after the last photo."""
+    _cancel_panel(s)
+    s["panel_task"] = asyncio.create_task(_panel_after_delay(message, s))
+
+
+async def _panel_after_delay(message: Message, s):
+    try:
+        await asyncio.sleep(1.0)
+    except asyncio.CancelledError:
+        return
+    await _post_panel(message, s)
+
+
+async def _post_panel(message: Message, s):
     lang = s["lang"]
-    text = t(lang, "collected", n=len(s["files"]))
-    if s.get("collect_msg_id"):
-        try:
-            await message.bot.edit_message_text(
-                text=text, chat_id=message.chat.id, message_id=s["collect_msg_id"],
-                reply_markup=kb_collect(lang, True),
-            )
-            return
-        except Exception:
-            pass
-    m = await message.answer(text, reply_markup=kb_collect(lang, True))
-    s["collect_msg_id"] = m.message_id
+    old = s.get("collect_msg_id")
+    try:
+        m = await message.answer(
+            t(lang, "collected", n=len(s["files"])), reply_markup=kb_collect(lang, True)
+        )
+        s["collect_msg_id"] = m.message_id
+    except Exception:
+        return
+    if old:
+        await _delete(message.bot, message.chat.id, old)
 
 
 # --------------------------------------------------------------------------- #
@@ -457,6 +517,7 @@ async def _update_counter(message: Message, s):
 # --------------------------------------------------------------------------- #
 async def run_current(message: Message, s):
     lang = s["lang"]
+    _cancel_panel(s)
     op = C.OP_BY_ID.get(s.get("op"))
     if not op:
         await open_menu(message, s)
@@ -495,6 +556,10 @@ async def run_current(message: Message, s):
         await bot.send_chat_action(chat_id=chat_id, action="upload_document")
     except Exception:
         pass
+
+    outname = s["params"].get("outname")
+    if outname and len(outputs) == 1 and op["id"] not in C.TEXT_OUTPUT_OPS:
+        outputs = [_apply_name(Path(outputs[0]), outname)]
 
     sent = 0
     for out in outputs[:25]:

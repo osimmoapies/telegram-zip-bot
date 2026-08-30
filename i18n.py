@@ -44,6 +44,8 @@ UI = {
         "err_wrong_type": "🤔 Не тот тип файла. {hint}",
         "err_no_files": "🤔 Ты ещё ничего не прислал.",
         "cleared": "🗑 Очищено.",
+        "name_hint": "💡 Можешь прислать своё <b>название файла</b> (например, <code>моё.pdf</code>).",
+        "name_set": "✅ Имя файла: <b>{name}</b>",
         "help": (
             "🧰 <b>FileBox</b> — универсальный файловый мастер.\n\n"
             "Как пользоваться:\n"
@@ -91,6 +93,8 @@ UI = {
         "err_wrong_type": "🤔 Wrong file type. {hint}",
         "err_no_files": "🤔 You haven't sent anything yet.",
         "cleared": "🗑 Cleared.",
+        "name_hint": "💡 You can send a custom <b>file name</b> (e.g. <code>my.pdf</code>).",
+        "name_set": "✅ File name: <b>{name}</b>",
         "help": (
             "🧰 <b>FileBox</b> — your universal file master.\n\n"
             "How to use:\n"
@@ -138,6 +142,8 @@ UI = {
         "err_wrong_type": "🤔 Навъи файл нодуруст аст. {hint}",
         "err_no_files": "🤔 Шумо ҳанӯз чизе нафиристодед.",
         "cleared": "🗑 Тоза шуд.",
+        "name_hint": "💡 Метавонед <b>номи файл</b>-ро фиристед (мисол: <code>ман.pdf</code>).",
+        "name_set": "✅ Номи файл: <b>{name}</b>",
         "help": (
             "🧰 <b>FileBox</b> — устоди универсалии файлҳо.\n\n"
             "Тарзи истифода:\n"
