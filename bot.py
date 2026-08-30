@@ -60,6 +60,10 @@ MAX_PER_HOUR = 30                       # per-user conversions / hour (non-free)
 PACK_SIZE = int(os.environ.get("PACK_SIZE", "10") or "10")
 PACK_PRICE = int(os.environ.get("PACK_PRICE", "20") or "20")
 FRAUD_LIMIT = 10                        # block payments after this many refunds
+FREE_WEEKLY = int(os.environ.get("FREE_WEEKLY", "3") or "3")   # free conversions / week
+REF_REWARD = int(os.environ.get("REF_REWARD", "3") or "3")     # credits per referral
+BOT_USERNAME = os.environ.get("BOT_USERNAME", "fileboxall_bot").lstrip("@")
+WATERMARK_ON = os.environ.get("WATERMARK", "1") != "0"
 STARTED = time.time()
 
 IMG_EXT = {"jpg", "jpeg", "png", "webp", "bmp", "tiff", "tif", "gif", "heic", "heif"}
@@ -88,6 +92,7 @@ def get_session(user_id, lang_hint=None):
             "panel_task": None,
             "lock": asyncio.Lock(),
             "conv_times": [],
+            "uid": user_id,
             "dir": BASE_DIR / str(user_id),
         }
         sessions[user_id] = s
@@ -208,6 +213,17 @@ async def on_start(message: Message):
     if s["lock"].locked():
         await message.answer(t(s["lang"], "busy"))
         return
+    # referral deep-link: /start ref_<referrerId>
+    parts = (message.text or "").split(maxsplit=1)
+    if len(parts) > 1 and parts[1].startswith("ref_"):
+        ref_by = parts[1][4:]
+        if (
+            ref_by.isdigit()
+            and ref_by != str(message.from_user.id)
+            and not store.get_referrer(message.from_user.id)
+        ):
+            store.set_referrer(message.from_user.id, ref_by)
+            asyncio.create_task(store.save())
     reset_job(s)
     s["view"] = "menu"
     await message.answer(t(s["lang"], "choose_language"), reply_markup=kb_lang())
@@ -277,6 +293,15 @@ async def gate_and_run(message: Message, s, user_id):
     # antifraud: too many refunds → block paid access
     if store.refunds_of(user_id) >= FRAUD_LIMIT:
         await message.answer(t(s["lang"], "err_fraud"))
+        return
+    # weekly free tier (hooks new users before they pay)
+    week = int(time.time() // 604800)
+    if store.free_count(user_id, week) < FREE_WEEKLY:
+        store.use_free(user_id, week)
+        asyncio.create_task(store.save())
+        left = max(0, FREE_WEEKLY - store.free_count(user_id, week))
+        await message.answer(t(s["lang"], "free_used", left=left))
+        await run_current(message, s)
         return
     # use a pre-paid pack credit if available
     if store.use_credit(user_id):
@@ -770,6 +795,9 @@ async def _do_conversion(message: Message, s, op):
     except Exception:
         pass
 
+    if WATERMARK_ON and len(outputs) == 1 and op["id"] not in C.TEXT_OUTPUT_OPS:
+        C.watermark_file(outputs[0])
+
     outname = s["params"].get("outname")
     if outname and len(outputs) == 1 and op["id"] not in C.TEXT_OUTPUT_OPS:
         outputs = [_apply_name(Path(outputs[0]), outname)]
@@ -794,9 +822,36 @@ async def _do_conversion(message: Message, s, op):
         await message.answer(t(lang, "err_generic"))
     else:
         store.bump_stat(op["id"])
+        await _maybe_reward_referrer(message, s)
+    uid = s["uid"]
     reset_job(s)
     s["view"] = "menu"
-    await message.answer(t(lang, "ready_again"), reply_markup=kb_menu(lang))
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text=t(lang, "share_button"), url=_share_url(uid, lang))]]
+        + kb_menu(lang).inline_keyboard
+    )
+    await message.answer(t(lang, "ready_again"), reply_markup=kb)
+
+
+async def _maybe_reward_referrer(message: Message, s):
+    ref = store.get_referrer(s["uid"])
+    if not ref or ref.get("rewarded"):
+        return
+    by = ref.get("by")
+    store.add_credits(by, REF_REWARD)
+    store.mark_referral_rewarded(s["uid"])
+    asyncio.create_task(store.save())
+    rlang = (sessions.get(int(by)) or {}).get("lang", "ru") if str(by).isdigit() else "ru"
+    try:
+        await message.bot.send_message(int(by), t(rlang, "ref_reward", n=REF_REWARD))
+    except Exception:
+        pass
+
+
+def _share_url(uid, lang):
+    from urllib.parse import quote
+    link = f"https://t.me/{BOT_USERNAME}?start=ref_{uid}"
+    return f"https://t.me/share/url?url={quote(link)}&text={quote(t(lang, 'share_text'))}"
 
 
 async def _send_output(message: Message, lang, op_id, path: Path):

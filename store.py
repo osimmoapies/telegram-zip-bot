@@ -29,6 +29,8 @@ _state = {
     "credits": {},
     "payments": [],
     "refunds": {},
+    "free": {},
+    "referrals": {},
 }
 
 
@@ -44,6 +46,8 @@ def _normalize():
     _state.setdefault("credits", {})
     _state.setdefault("payments", [])
     _state.setdefault("refunds", {})
+    _state.setdefault("free", {})
+    _state.setdefault("referrals", {})
 
 
 async def load():
@@ -151,3 +155,36 @@ def bump_refund(uid):
     global _dirty
     _state["refunds"][str(uid)] = refunds_of(uid) + 1
     _dirty = True
+
+
+# --- weekly free tier ---
+def free_count(uid, week):
+    rec = _state.get("free", {}).get(str(uid))
+    if not rec or rec.get("week") != week:
+        return 0
+    return int(rec.get("count", 0))
+
+
+def use_free(uid, week):
+    global _dirty
+    _state.setdefault("free", {})[str(uid)] = {"week": week, "count": free_count(uid, week) + 1}
+    _dirty = True
+
+
+# --- referrals ---
+def set_referrer(uid, by):
+    global _dirty
+    _state.setdefault("referrals", {})[str(uid)] = {"by": str(by), "rewarded": False}
+    _dirty = True
+
+
+def get_referrer(uid):
+    return _state.get("referrals", {}).get(str(uid))
+
+
+def mark_referral_rewarded(uid):
+    global _dirty
+    r = _state.get("referrals", {}).get(str(uid))
+    if r:
+        r["rewarded"] = True
+        _dirty = True

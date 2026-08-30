@@ -30,13 +30,94 @@ def _run(cmd, timeout=180):
     return proc
 
 
+BRAND = "@fileboxall_bot"
+BRAND_LINK = "https://t.me/fileboxall_bot"
+
+
 def _zip_files(files, out_zip: Path) -> Path:
     with zipfile.ZipFile(out_zip, "w", zipfile.ZIP_DEFLATED) as zf:
         for p in files:
             p = Path(p)
             if p.is_file():
                 zf.write(p, arcname=p.name)
+        zf.writestr(
+            "README-fileboxall_bot.txt",
+            f"Processed by {BRAND}\nConvert files free in Telegram: {BRAND_LINK}\n",
+        )
     return out_zip
+
+
+# --------------------------------------------------------------------------- #
+# Watermark / branding on outputs (drives word-of-mouth growth)
+# --------------------------------------------------------------------------- #
+def _load_font(size):
+    from PIL import ImageFont
+    for path in (
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "DejaVuSans.ttf",
+    ):
+        try:
+            return ImageFont.truetype(path, size)
+        except Exception:
+            continue
+    return ImageFont.load_default()
+
+
+def _wm_image(p: Path):
+    from PIL import Image, ImageDraw
+    base = Image.open(p)
+    has_alpha = base.mode in ("RGBA", "LA", "P")
+    im = base.convert("RGBA")
+    overlay = Image.new("RGBA", im.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(overlay)
+    size = max(12, im.width // 38)
+    font = _load_font(size)
+    bbox = d.textbbox((0, 0), BRAND, font=font)
+    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    x, y = im.width - tw - size, im.height - th - size - bbox[1]
+    d.text((x + 1, y + 1), BRAND, font=font, fill=(0, 0, 0, 90))
+    d.text((x, y), BRAND, font=font, fill=(255, 255, 255, 150))
+    merged = Image.alpha_composite(im, overlay)
+    if has_alpha:
+        merged.save(p, "PNG")
+    else:
+        merged.convert("RGB").save(p, "JPEG", quality=92)
+
+
+def _wm_pdf(p: Path):
+    import io
+    from pypdf import PdfReader, PdfWriter
+    from reportlab.pdfgen import canvas
+    reader = PdfReader(str(p))
+    writer = PdfWriter()
+    for page in reader.pages:
+        w, h = float(page.mediabox.width), float(page.mediabox.height)
+        buf = io.BytesIO()
+        c = canvas.Canvas(buf, pagesize=(w, h))
+        c.setFont("Helvetica", 8)
+        c.setFillColorRGB(0.55, 0.55, 0.55)
+        c.drawCentredString(w / 2, 10, f"Processed by {BRAND}")
+        c.save()
+        buf.seek(0)
+        page.merge_page(PdfReader(buf).pages[0])
+        writer.add_page(page)
+    with open(p, "wb") as f:
+        writer.write(f)
+
+
+def watermark_file(path):
+    """Stamp our brand onto image/PDF outputs. Never fails the conversion."""
+    p = Path(path)
+    ext = p.suffix.lower()
+    try:
+        if ext in (".jpg", ".jpeg", ".png", ".webp"):
+            _wm_image(p)
+        elif ext == ".pdf":
+            _wm_pdf(p)
+    except Exception:
+        pass
+    return path
 
 
 MAX_IMAGE_PIXELS = 64_000_000  # ~64 MP: guards against decompression bombs

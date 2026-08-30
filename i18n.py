@@ -64,6 +64,10 @@ UI = {
         "pack_added": "🎟 +{n} обработок зачислено! На балансе: <b>{credits}</b>. Просто пришли файл 🎁",
         "credit_used": "🎟 Списана 1 обработка из пакета. Остаток: <b>{credits}</b>.",
         "err_fraud": "🚫 Слишком много возвратов — оплата временно недоступна.",
+        "free_used": "🆓 Бесплатная обработка ({left} осталось на этой неделе).",
+        "share_button": "📤 Поделиться",
+        "share_text": "Конвертирую любые файлы бесплатно в Telegram 👉",
+        "ref_reward": "🎁 Твой друг воспользовался ботом — тебе +{n} бесплатных обработок!",
         "help": (
             "🧰 <b>FileBox</b> — универсальный файловый мастер.\n\n"
             "Как пользоваться:\n"
@@ -133,6 +137,10 @@ UI = {
         "pack_added": "🎟 +{n} conversions added! Balance: <b>{credits}</b>. Just send a file 🎁",
         "credit_used": "🎟 Used 1 conversion from your pack. Left: <b>{credits}</b>.",
         "err_fraud": "🚫 Too many refunds — payments are temporarily unavailable.",
+        "free_used": "🆓 Free conversion ({left} left this week).",
+        "share_button": "📤 Share",
+        "share_text": "Convert any file for free in Telegram 👉",
+        "ref_reward": "🎁 Your friend used the bot — you got +{n} free conversions!",
         "help": (
             "🧰 <b>FileBox</b> — your universal file master.\n\n"
             "How to use:\n"
@@ -202,6 +210,10 @@ UI = {
         "pack_added": "🎟 +{n} коркард илова шуд! Дар баланс: <b>{credits}</b>. Танҳо файл фиристед 🎁",
         "credit_used": "🎟 1 коркард аз баста истифода шуд. Боқӣ: <b>{credits}</b>.",
         "err_fraud": "🚫 Хеле зиёд баргардонида шуд — пардохт муваққатан дастнорас аст.",
+        "free_used": "🆓 Коркарди ройгон ({left} дар ин ҳафта мондааст).",
+        "share_button": "📤 Мубодила",
+        "share_text": "Ҳар файлро дар Telegram ройгон табдил медиҳам 👉",
+        "ref_reward": "🎁 Дӯстат аз бот истифода кард — ба ту +{n} коркарди ройгон!",
         "help": (
             "🧰 <b>FileBox</b> — устоди универсалии файлҳо.\n\n"
             "Тарзи истифода:\n"
@@ -271,6 +283,10 @@ UI = {
         "pack_added": "🎟 +{n} ishlov qo'shildi! Balans: <b>{credits}</b>. Shunchaki fayl yuboring 🎁",
         "credit_used": "🎟 Paketdan 1 ishlov ishlatildi. Qoldi: <b>{credits}</b>.",
         "err_fraud": "🚫 Juda ko'p qaytarish — to'lov vaqtincha mavjud emas.",
+        "free_used": "🆓 Bepul ishlov ({left} bu hafta qoldi).",
+        "share_button": "📤 Ulashish",
+        "share_text": "Telegram'da istalgan faylni bepul o'giraman 👉",
+        "ref_reward": "🎁 Do'stingiz botdan foydalandi — sizga +{n} bepul ishlov!",
         "help": (
             "🧰 <b>FileBox</b> — universal fayl ustasi.\n\n"
             "Qanday ishlatish:\n"

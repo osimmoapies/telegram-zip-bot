@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 RUN apt-get update && apt-get install -y --no-install-recommends \
       libreoffice poppler-utils ghostscript ffmpeg \
       tesseract-ocr tesseract-ocr-rus tesseract-ocr-eng \
-      zbar-tools libzbar0 libheif1 \
+      zbar-tools libzbar0 libheif1 fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
