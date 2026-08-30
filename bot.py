@@ -51,6 +51,10 @@ PRICE_STARS = int(os.environ.get("PRICE_STARS", "1") or "1")
 def is_free(user_id):
     return str(user_id) in FREE_IDS
 
+
+CONV_TIMEOUT = 180                      # hard cap per conversion (seconds)
+CONCURRENCY = asyncio.Semaphore(3)      # max simultaneous heavy conversions
+
 IMG_EXT = {"jpg", "jpeg", "png", "webp", "bmp", "tiff", "tif", "gif", "heic", "heif"}
 OFFICE_EXT = {"doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp", "rtf", "txt", "csv"}
 VIDEO_EXT = {"mp4", "mov", "avi", "mkv", "webm", "m4v"}
@@ -75,6 +79,7 @@ def get_session(user_id, lang_hint=None):
             "params": {},
             "collect_msg_id": None,
             "panel_task": None,
+            "lock": asyncio.Lock(),
             "dir": BASE_DIR / str(user_id),
         }
         sessions[user_id] = s
@@ -576,28 +581,43 @@ async def run_current(message: Message, s):
     if not s["files"] and op["input"] not in C.TEXT_INPUTS:
         await message.answer(t(lang, "err_no_files"))
         return
+    if s["lock"].locked():
+        await message.answer(t(lang, "busy"))
+        return
+    async with s["lock"]:
+        await _do_conversion(message, s, op)
 
+
+async def _do_conversion(message: Message, s, op):
+    lang = s["lang"]
     bot = message.bot
     chat_id = message.chat.id
     prog = await message.answer(
         t(lang, "progress_frame", stage=t(lang, "stage_prepare"), bar=_bar(0), pct=0)
     )
 
-    task = asyncio.create_task(
-        asyncio.to_thread(op["fn"], list(s["files"]), s["dir"], dict(s["params"]))
-    )
-    for pct, stage in ((20, "stage_prepare"), (55, "stage_process"), (85, "stage_process")):
-        await asyncio.sleep(0.4)
-        if task.done():
-            break
-        await _progress(bot, chat_id, prog.message_id, lang, pct, stage)
-
     try:
-        outputs = await task
-    except Exception as e:
-        logger.exception("conversion failed")
+        async with CONCURRENCY:
+            task = asyncio.create_task(
+                asyncio.to_thread(op["fn"], list(s["files"]), s["dir"], dict(s["params"]))
+            )
+            for pct, stage in ((20, "stage_prepare"), (55, "stage_process"), (85, "stage_process")):
+                await asyncio.sleep(0.4)
+                if task.done():
+                    break
+                await _progress(bot, chat_id, prog.message_id, lang, pct, stage)
+            outputs = await asyncio.wait_for(task, timeout=CONV_TIMEOUT)
+    except asyncio.TimeoutError:
+        logger.warning("conversion timeout: %s", op["id"])
         await _delete(bot, chat_id, prog.message_id)
-        await message.answer(t(lang, "err_generic", err=html.escape(str(e)[:200])))
+        await message.answer(t(lang, "err_timeout"))
+        reset_job(s)
+        s["view"] = "menu"
+        return
+    except Exception:
+        logger.exception("conversion failed: %s", op["id"])
+        await _delete(bot, chat_id, prog.message_id)
+        await message.answer(t(lang, "err_generic"))
         reset_job(s)
         s["view"] = "menu"
         return
@@ -629,7 +649,7 @@ async def run_current(message: Message, s):
 
     await _delete(bot, chat_id, prog.message_id)
     if sent == 0:
-        await message.answer(t(lang, "err_generic", err="empty result"))
+        await message.answer(t(lang, "err_generic"))
     reset_job(s)
     s["view"] = "menu"
     await message.answer(t(lang, "ready_again"), reply_markup=kb_menu(lang))

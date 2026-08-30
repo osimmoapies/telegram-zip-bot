@@ -79,9 +79,16 @@ def photos_to_pdf(inputs, out, params):
     return [dst]
 
 
+MAX_PDF_PAGES = 100  # DoS guard: cap pages we rasterize/split
+
+
 def pdf_to_images(inputs, out, params):
+    from pypdf import PdfReader
     from pdf2image import convert_from_path
-    pages = convert_from_path(str(inputs[0]), dpi=150)
+    n = len(PdfReader(str(inputs[0])).pages)
+    if n > MAX_PDF_PAGES:
+        raise RuntimeError(f"too many pages (max {MAX_PDF_PAGES})")
+    pages = convert_from_path(str(inputs[0]), dpi=150, last_page=MAX_PDF_PAGES)
     files = []
     for i, page in enumerate(pages, 1):
         p = out / f"page_{i:03d}.png"
@@ -104,6 +111,8 @@ def merge_pdf(inputs, out, params):
 def split_pdf(inputs, out, params):
     from pypdf import PdfReader, PdfWriter
     reader = PdfReader(str(inputs[0]))
+    if len(reader.pages) > 2 * MAX_PDF_PAGES:
+        raise RuntimeError(f"too many pages (max {2 * MAX_PDF_PAGES})")
     files = []
     for i, page in enumerate(reader.pages, 1):
         w = PdfWriter()
@@ -118,7 +127,7 @@ def split_pdf(inputs, out, params):
 def compress_pdf(inputs, out, params):
     dst = out / "compressed.pdf"
     _run([
-        "gs", "-sDEVICE=pdfwrite", "-dCompatibilityLevel=1.4",
+        "gs", "-dSAFER", "-sDEVICE=pdfwrite", "-dCompatibilityLevel=1.4",
         "-dPDFSETTINGS=/ebook", "-dNOPAUSE", "-dQUIET", "-dBATCH",
         f"-sOutputFile={dst}", str(inputs[0]),
     ])
@@ -238,14 +247,26 @@ def files_to_zip(inputs, out, params):
 
 
 def unzip(inputs, out, params):
-    extract_dir = out / "unzipped"
+    extract_dir = (out / "unzipped").resolve()
     extract_dir.mkdir(exist_ok=True)
     with zipfile.ZipFile(inputs[0]) as zf:
-        # basic zip-bomb guard: cap total uncompressed size
-        total = sum(info.file_size for info in zf.infolist())
-        if total > 200 * 1024 * 1024:
+        infos = zf.infolist()
+        if len(infos) > 100:
+            raise RuntimeError("too many files in archive (max 100)")
+        # zip-bomb guard: cap total uncompressed size
+        if sum(info.file_size for info in infos) > 200 * 1024 * 1024:
             raise RuntimeError("archive too large when unpacked")
-        zf.extractall(extract_dir)
+        for info in infos:
+            if info.is_dir():
+                continue
+            name = info.filename
+            # reject path traversal / absolute paths
+            if name.startswith("/") or ".." in Path(name).parts:
+                continue
+            target = (extract_dir / name).resolve()
+            if not str(target).startswith(str(extract_dir)):
+                continue
+            zf.extract(info, extract_dir)
     files = [p for p in extract_dir.rglob("*") if p.is_file()]
     if not files:
         raise RuntimeError("archive is empty")
