@@ -22,7 +22,7 @@ UI = {
         "btn_help": "❓ Помощь",
         "collected": "📎 Собрано: <b>{n}</b>\nПришли ещё или нажми <b>«▶️ Готово»</b>.",
         "prompt_images": "🖼 Пришли <b>фотографии</b> (сколько нужно), потом нажми <b>«▶️ Готово»</b>.",
-        "prompt_image": "🖼 Пришли <b>одно изображение</b>.",
+        "prompt_image": "🖼 Пришли <b>одну фотографию</b>.",
         "prompt_pdf": "📄 Пришли <b>PDF-файл</b>.",
         "prompt_pdfs": "📄 Пришли <b>несколько PDF</b>, потом нажми <b>«▶️ Готово»</b>.",
         "prompt_office": "📝 Пришли <b>документ</b> (Word, Excel, PowerPoint, TXT…).",
@@ -40,10 +40,12 @@ UI = {
         "ready_again": "✨ Готово! Выбери следующий инструмент — /menu",
         "err_generic": "😕 Не получилось обработать. Проверь файл и попробуй ещё раз.",
         "err_timeout": "⌛ Обработка заняла слишком долго и была остановлена. Попробуй файл поменьше.",
+        "err_rate": "🚦 Слишком много обработок за час. Подожди немного и попробуй снова.",
+        "pay_refunded": "↩️ Задача была отменена, поэтому я вернул тебе звёзды. Начни заново — /menu",
         "busy": "⏳ Подожди — я ещё обрабатываю предыдущий файл…",
         "err_too_big_in": "⚠️ Файл больше <b>20 МБ</b> — Telegram не даёт мне его скачать. Пришли поменьше.",
         "err_too_big_out": "⚠️ Результат больше <b>50 МБ</b> — не могу отправить. Попробуй сжать/меньше файлов.",
-        "err_wrong_type": "🤔 Не тот тип файла. {hint}",
+        "err_wrong_type": "🤔 Не тот тип файла. Нужно прислать: {hint}",
         "err_no_files": "🤔 Ты ещё ничего не прислал.",
         "cleared": "🗑 Очищено.",
         "name_hint": "💡 Можешь прислать своё <b>название файла</b> (например, <code>моё.pdf</code>).",
@@ -61,7 +63,9 @@ UI = {
             "3️⃣ Пришли файл(ы)\n"
             "4️⃣ Получи готовый результат 🎁\n\n"
             "Команды: /menu · /language · /help\n"
-            "Лимит: входящий файл до 20 МБ, результат до 50 МБ."
+            "Лимит: входящий файл до 20 МБ, результат до 50 МБ.\n"
+            "💫 Бесплатно для избранных; остальным — {stars} ⭐ за обработку.\n"
+            "✏️ Пришли текст-сообщение, чтобы задать имя файла (например, моё.pdf)."
         ),
     },
     "en": {
@@ -96,10 +100,12 @@ UI = {
         "ready_again": "✨ Done! Pick the next tool — /menu",
         "err_generic": "😕 Couldn't process it. Check the file and try again.",
         "err_timeout": "⌛ Processing took too long and was stopped. Try a smaller file.",
+        "err_rate": "🚦 Too many conversions this hour. Please wait a bit and try again.",
+        "pay_refunded": "↩️ The job was cancelled, so I refunded your Stars. Start again — /menu",
         "busy": "⏳ Please wait — I'm still processing your previous file…",
         "err_too_big_in": "⚠️ The file is over <b>20 MB</b> — Telegram won't let me download it. Send a smaller one.",
         "err_too_big_out": "⚠️ The result is over <b>50 MB</b> — I can't send it. Try compressing / fewer files.",
-        "err_wrong_type": "🤔 Wrong file type. {hint}",
+        "err_wrong_type": "🤔 Wrong file type. Please send: {hint}",
         "err_no_files": "🤔 You haven't sent anything yet.",
         "cleared": "🗑 Cleared.",
         "name_hint": "💡 You can send a custom <b>file name</b> (e.g. <code>my.pdf</code>).",
@@ -117,7 +123,9 @@ UI = {
             "3️⃣ Send your file(s)\n"
             "4️⃣ Get the result 🎁\n\n"
             "Commands: /menu · /language · /help\n"
-            "Limits: incoming file up to 20 MB, result up to 50 MB."
+            "Limits: incoming file up to 20 MB, result up to 50 MB.\n"
+            "💫 Free for selected users; others pay {stars} ⭐ per conversion.\n"
+            "✏️ Send a text message to name your output file (e.g. my.pdf)."
         ),
     },
     "tg": {
@@ -152,13 +160,15 @@ UI = {
         "ready_again": "✨ Тайёр! Абзори навбатиро интихоб кунед — /menu",
         "err_generic": "😕 Коркард нашуд. Файлро санҷед ва боз кӯшиш кунед.",
         "err_timeout": "⌛ Коркард хеле тӯл кашид ва қатъ шуд. Файли хурдтарро кӯшиш кунед.",
+        "err_rate": "🚦 Дар як соат хеле зиёд коркард. Каме интизор шавед ва боз кӯшиш кунед.",
+        "pay_refunded": "↩️ Вазифа бекор шуд, барои ҳамин ситораҳоятонро баргардондам. Аз нав оғоз кунед — /menu",
         "busy": "⏳ Лутфан интизор шавед — ман ҳанӯз файли қаблиро коркард мекунам…",
         "err_too_big_in": "⚠️ Файл аз <b>20 МБ</b> зиёд аст — Telegram ба ман иҷозаи боргирӣ намедиҳад. Хурдтарашро фиристед.",
         "err_too_big_out": "⚠️ Натиҷа аз <b>50 МБ</b> зиёд аст — фиристода наметавонам. Фишурда кунед ё камтар файл.",
-        "err_wrong_type": "🤔 Навъи файл нодуруст аст. {hint}",
+        "err_wrong_type": "🤔 Навъи файл нодуруст. Лутфан фиристед: {hint}",
         "err_no_files": "🤔 Шумо ҳанӯз чизе нафиристодед.",
         "cleared": "🗑 Тоза шуд.",
-        "name_hint": "💡 Метавонед <b>номи файл</b>-ро фиристед (мисол: <code>ман.pdf</code>).",
+        "name_hint": "💡 Метавонед <b>номи файл</b>-ро фиристед (мисол: <code>файл.pdf</code>).",
         "name_set": "✅ Номи файл: <b>{name}</b>",
         "pay_prompt": "🔒 Коркард <b>{stars} ⭐</b> меарзад. Барои идома пардохт кунед 👇",
         "pay_title": "FileBox — коркарди файл",
@@ -173,7 +183,9 @@ UI = {
             "3️⃣ Файл(ҳо)ро фиристед\n"
             "4️⃣ Натиҷаро гиред 🎁\n\n"
             "Фармонҳо: /menu · /language · /help\n"
-            "Маҳдудият: файли воридотӣ то 20 МБ, натиҷа то 50 МБ."
+            "Маҳдудият: файли воридотӣ то 20 МБ, натиҷа то 50 МБ.\n"
+            "💫 Барои интихобшудагон ройгон; барои дигарон — {stars} ⭐ барои коркард.\n"
+            "✏️ Матн фиристед, то ба файл ном диҳед (мисол: файл.pdf)."
         ),
     },
 }

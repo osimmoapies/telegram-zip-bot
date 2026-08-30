@@ -39,15 +39,22 @@ def _zip_files(files, out_zip: Path) -> Path:
     return out_zip
 
 
+MAX_IMAGE_PIXELS = 64_000_000  # ~64 MP: guards against decompression bombs
+
+
 def _open_image(path):
-    """Open an image, transparently supporting HEIC/HEIF."""
+    """Open an image, transparently supporting HEIC/HEIF, with a bomb guard."""
     from PIL import Image
+    Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS
     try:
         from pillow_heif import register_heif_opener
         register_heif_opener()
     except Exception:
         pass
-    return Image.open(path)
+    img = Image.open(path)
+    if (img.width or 0) * (img.height or 0) > MAX_IMAGE_PIXELS:
+        raise RuntimeError("image resolution too large")
+    return img
 
 
 def _soffice(src: Path, out: Path, target: str, timeout=150) -> Path:
@@ -83,8 +90,11 @@ MAX_PDF_PAGES = 100  # DoS guard: cap pages we rasterize/split
 
 
 def pdf_to_images(inputs, out, params):
+    import shutil as _sh
     from pypdf import PdfReader
     from pdf2image import convert_from_path
+    if _sh.disk_usage(out).free < 500 * 1024 * 1024:
+        raise RuntimeError("insufficient disk space")
     n = len(PdfReader(str(inputs[0])).pages)
     if n > MAX_PDF_PAGES:
         raise RuntimeError(f"too many pages (max {MAX_PDF_PAGES})")
@@ -259,6 +269,11 @@ def unzip(inputs, out, params):
         for info in infos:
             if info.is_dir():
                 continue
+            # per-file size cap + zip-bomb ratio guard
+            if info.file_size > 60 * 1024 * 1024:
+                raise RuntimeError("a file in the archive is too large")
+            if info.compress_size > 0 and info.file_size / info.compress_size > 200:
+                raise RuntimeError("suspicious compression ratio (possible zip bomb)")
             name = info.filename
             # reject path traversal / absolute paths
             if name.startswith("/") or ".." in Path(name).parts:

@@ -12,6 +12,7 @@ import logging
 import os
 import shutil
 import tempfile
+import time
 from pathlib import Path
 
 from aiogram import Bot, Dispatcher, F
@@ -54,6 +55,7 @@ def is_free(user_id):
 
 CONV_TIMEOUT = 180                      # hard cap per conversion (seconds)
 CONCURRENCY = asyncio.Semaphore(3)      # max simultaneous heavy conversions
+MAX_PER_HOUR = 30                       # per-user conversions / hour (non-free)
 
 IMG_EXT = {"jpg", "jpeg", "png", "webp", "bmp", "tiff", "tif", "gif", "heic", "heif"}
 OFFICE_EXT = {"doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp", "rtf", "txt", "csv"}
@@ -80,6 +82,7 @@ def get_session(user_id, lang_hint=None):
             "collect_msg_id": None,
             "panel_task": None,
             "lock": asyncio.Lock(),
+            "conv_times": [],
             "dir": BASE_DIR / str(user_id),
         }
         sessions[user_id] = s
@@ -192,6 +195,9 @@ async def _progress(bot, chat_id, msg_id, lang, pct, stage_key):
 async def on_start(message: Message):
     lang = detect_lang(message.from_user.language_code)
     s = get_session(message.from_user.id, lang)
+    if s["lock"].locked():
+        await message.answer(t(s["lang"], "busy"))
+        return
     reset_job(s)
     s["view"] = "menu"
     await message.answer(t(s["lang"], "choose_language"), reply_markup=kb_lang())
@@ -200,6 +206,9 @@ async def on_start(message: Message):
 @dp.message(Command("menu"))
 async def on_menu(message: Message):
     s = get_session(message.from_user.id, detect_lang(message.from_user.language_code))
+    if s["lock"].locked():
+        await message.answer(t(s["lang"], "busy"))
+        return
     await open_menu(message, s)
 
 
@@ -212,7 +221,7 @@ async def on_language(message: Message):
 @dp.message(Command("help"))
 async def on_help(message: Message):
     s = get_session(message.from_user.id, detect_lang(message.from_user.language_code))
-    await message.answer(t(s["lang"], "help"))
+    await message.answer(t(s["lang"], "help", stars=PRICE_STARS))
 
 
 @dp.message(Command("id"))
@@ -225,6 +234,15 @@ async def on_id(message: Message):
 # --------------------------------------------------------------------------- #
 async def gate_and_run(message: Message, s, user_id):
     """Free users run instantly; others must pay Stars first."""
+    if s["lock"].locked():
+        await message.answer(t(s["lang"], "busy"))
+        return
+    # per-user hourly rate limit (whitelisted users are exempt)
+    now = time.time()
+    s["conv_times"] = [x for x in s["conv_times"] if now - x < 3600]
+    if not is_free(user_id) and len(s["conv_times"]) >= MAX_PER_HOUR:
+        await message.answer(t(s["lang"], "err_rate"))
+        return
     if is_free(user_id):
         await run_current(message, s)
     else:
@@ -252,7 +270,28 @@ async def on_pre_checkout(q: PreCheckoutQuery):
 @dp.message(F.successful_payment)
 async def on_paid(message: Message):
     s = get_session(message.from_user.id, detect_lang(message.from_user.language_code))
-    await message.answer(t(s["lang"], "pay_thanks"))
+    lang = s["lang"]
+    sp = message.successful_payment
+    paid_op = (sp.invoice_payload or "").split(":", 1)[-1]
+    op = C.OP_BY_ID.get(paid_op)
+    # The paid job must still be the active one (user may have navigated away).
+    valid = (
+        op is not None
+        and s.get("op") == paid_op
+        and (s["files"] or op["input"] in C.TEXT_INPUTS)
+    )
+    if not valid:
+        # Honestly refund — they paid but the job is gone / changed.
+        try:
+            await message.bot.refund_star_payment(
+                user_id=message.from_user.id,
+                telegram_payment_charge_id=sp.telegram_payment_charge_id,
+            )
+        except Exception:
+            logger.exception("refund failed")
+        await message.answer(t(lang, "pay_refunded"))
+        return
+    await message.answer(t(lang, "pay_thanks"))
     await run_current(message, s)
 
 
@@ -269,6 +308,8 @@ async def open_menu(message: Message, s):
 async def cb_setlang(cb: CallbackQuery):
     lang = cb.data.split(":", 1)[1]
     s = get_session(cb.from_user.id)
+    if await _cb_busy(cb, s):
+        return
     s["lang"] = lang if lang in i18n.LANGS else "en"
     reset_job(s)
     s["view"] = "menu"
@@ -286,13 +327,15 @@ async def cb_lang(cb: CallbackQuery):
 @dp.callback_query(F.data == "help")
 async def cb_help(cb: CallbackQuery):
     s = get_session(cb.from_user.id)
-    await cb.message.answer(t(s["lang"], "help"))
+    await cb.message.answer(t(s["lang"], "help", stars=PRICE_STARS))
     await cb.answer()
 
 
 @dp.callback_query(F.data == "home")
 async def cb_home(cb: CallbackQuery):
     s = get_session(cb.from_user.id)
+    if await _cb_busy(cb, s):
+        return
     reset_job(s)
     s["view"] = "menu"
     await _safe_edit(cb, t(s["lang"], "menu_title"), kb_menu(s["lang"]))
@@ -302,6 +345,8 @@ async def cb_home(cb: CallbackQuery):
 @dp.callback_query(F.data == "back")
 async def cb_back(cb: CallbackQuery):
     s = get_session(cb.from_user.id)
+    if await _cb_busy(cb, s):
+        return
     if s["view"] in ("param", "collect") and s.get("cat"):
         s["view"] = "cat"
         reset_job_keep_cat(s)
@@ -335,6 +380,8 @@ async def cb_cat(cb: CallbackQuery):
 @dp.callback_query(F.data.startswith("op:"))
 async def cb_op(cb: CallbackQuery):
     s = get_session(cb.from_user.id)
+    if await _cb_busy(cb, s):
+        return
     op_id = cb.data.split(":", 1)[1]
     op = C.OP_BY_ID.get(op_id)
     if not op:
@@ -353,6 +400,8 @@ async def cb_op(cb: CallbackQuery):
 @dp.callback_query(F.data.startswith("opt:"))
 async def cb_opt(cb: CallbackQuery):
     s = get_session(cb.from_user.id)
+    if await _cb_busy(cb, s):
+        return
     op = C.OP_BY_ID.get(s.get("op"))
     if not op:
         await cb.answer()
@@ -376,6 +425,8 @@ async def _enter_collect(cb: CallbackQuery, s, op):
 @dp.callback_query(F.data == "clear")
 async def cb_clear(cb: CallbackQuery):
     s = get_session(cb.from_user.id)
+    if await _cb_busy(cb, s):
+        return
     _cancel_panel(s)
     for p in s["files"]:
         try:
@@ -489,6 +540,9 @@ def _apply_name(path: Path, outname):
 async def on_media(message: Message):
     s = get_session(message.from_user.id, detect_lang(message.from_user.language_code))
     lang = s["lang"]
+    if s["lock"].locked():
+        await message.answer(t(lang, "busy"))
+        return
     if s.get("view") != "collect" or not s.get("op"):
         await open_menu(message, s)
         return
@@ -521,6 +575,9 @@ async def on_media(message: Message):
 @dp.message(F.text)
 async def on_text(message: Message):
     s = get_session(message.from_user.id, detect_lang(message.from_user.language_code))
+    if s["lock"].locked():
+        await message.answer(t(s["lang"], "busy"))
+        return
     op = C.OP_BY_ID.get(s.get("op"))
     if s.get("view") == "collect" and op:
         if op["input"] == "text":
@@ -590,6 +647,7 @@ async def run_current(message: Message, s):
 
 async def _do_conversion(message: Message, s, op):
     lang = s["lang"]
+    s["conv_times"].append(time.time())
     bot = message.bot
     chat_id = message.chat.id
     prog = await message.answer(
@@ -672,6 +730,14 @@ async def _send_output(message: Message, lang, op_id, path: Path):
 # --------------------------------------------------------------------------- #
 # small utils
 # --------------------------------------------------------------------------- #
+async def _cb_busy(cb: CallbackQuery, s):
+    """Block state-changing callbacks while a conversion is running."""
+    if s["lock"].locked():
+        await cb.answer(t(s["lang"], "busy"))
+        return True
+    return False
+
+
 async def _safe_edit(cb: CallbackQuery, text, markup):
     try:
         await cb.message.edit_text(text, reply_markup=markup)
