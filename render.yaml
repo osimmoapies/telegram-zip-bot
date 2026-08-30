@@ -1,0 +1,12 @@
+# Render Blueprint — deploy for free with one click after connecting the repo.
+# Render provides RENDER_EXTERNAL_URL automatically, so the bot runs in webhook mode.
+services:
+  - type: web
+    name: telegram-zip-bot
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    envVars:
+      - key: BOT_TOKEN
+        sync: false   # set this in the Render dashboard (from @BotFather)
