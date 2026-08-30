@@ -57,6 +57,9 @@ CONV_TIMEOUT = 180                      # hard cap per conversion (seconds)
 CONCURRENCY = asyncio.Semaphore(3)      # max simultaneous heavy conversions
 MAX_PER_HOUR = 30                       # per-user conversions / hour (non-free)
 
+# Live stats for this run (resets on the ~6h handoff; DB makes it persistent).
+STATS = {"conversions": 0, "stars": 0, "by_op": {}, "started": time.time()}
+
 IMG_EXT = {"jpg", "jpeg", "png", "webp", "bmp", "tiff", "tif", "gif", "heic", "heif"}
 OFFICE_EXT = {"doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp", "rtf", "txt", "csv"}
 VIDEO_EXT = {"mp4", "mov", "avi", "mkv", "webm", "m4v"}
@@ -109,11 +112,16 @@ def reset_job(s):
 # keyboards
 # --------------------------------------------------------------------------- #
 def kb_lang():
-    return InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton(text="🇷🇺 Русский", callback_data="setlang:ru"),
-        InlineKeyboardButton(text="🇬🇧 English", callback_data="setlang:en"),
-        InlineKeyboardButton(text="🇹🇯 Тоҷикӣ", callback_data="setlang:tg"),
-    ]])
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="🇷🇺 Русский", callback_data="setlang:ru"),
+            InlineKeyboardButton(text="🇬🇧 English", callback_data="setlang:en"),
+        ],
+        [
+            InlineKeyboardButton(text="🇹🇯 Тоҷикӣ", callback_data="setlang:tg"),
+            InlineKeyboardButton(text="🇺🇿 O'zbek", callback_data="setlang:uz"),
+        ],
+    ])
 
 
 def kb_menu(lang):
@@ -229,6 +237,23 @@ async def on_id(message: Message):
     await message.answer(f"🆔 <code>{message.from_user.id}</code>")
 
 
+@dp.message(Command("stats"))
+async def on_stats(message: Message):
+    if not is_free(message.from_user.id):
+        return  # owner-only, silent for others
+    up = int(time.time() - STATS["started"])
+    top = sorted(STATS["by_op"].items(), key=lambda kv: -kv[1])[:8]
+    rows = "\n".join(f"• {i18n.op_label('ru', k)}: <b>{v}</b>" for k, v in top) or "—"
+    await message.answer(
+        "📊 <b>Статистика (текущий запуск)</b>\n\n"
+        f"Обработок: <b>{STATS['conversions']}</b>\n"
+        f"Заработано: <b>{STATS['stars']} ⭐</b>\n"
+        f"Аптайм: {up // 3600}ч {up % 3600 // 60}м\n\n"
+        f"{rows}\n\n"
+        "<i>Сбрасывается при пересменке (~6ч). Постоянная — после подключения БД.</i>"
+    )
+
+
 # --------------------------------------------------------------------------- #
 # payments (Telegram Stars)
 # --------------------------------------------------------------------------- #
@@ -291,6 +316,7 @@ async def on_paid(message: Message):
             logger.exception("refund failed")
         await message.answer(t(lang, "pay_refunded"))
         return
+    STATS["stars"] += PRICE_STARS
     await message.answer(t(lang, "pay_thanks"))
     await run_current(message, s)
 
@@ -510,6 +536,8 @@ def _accepts(op_input, kind):
         return kind == "audio"
     if op_input == "files":
         return kind in ("image", "pdf", "office", "zip", "video", "audio", "other")
+    if op_input == "any":
+        return True
     return False
 
 
@@ -708,6 +736,9 @@ async def _do_conversion(message: Message, s, op):
     await _delete(bot, chat_id, prog.message_id)
     if sent == 0:
         await message.answer(t(lang, "err_generic"))
+    else:
+        STATS["conversions"] += 1
+        STATS["by_op"][op["id"]] = STATS["by_op"].get(op["id"], 0) + 1
     reset_job(s)
     s["view"] = "menu"
     await message.answer(t(lang, "ready_again"), reply_markup=kb_menu(lang))

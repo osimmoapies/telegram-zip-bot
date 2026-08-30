@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Translations for FileBox — Russian, English, Tajik. Clear, simple, no errors."""
 
-LANGS = ("ru", "en", "tg")
-LANG_NAMES = {"ru": "Русский", "en": "English", "tg": "Тоҷикӣ"}
+LANGS = ("ru", "en", "tg", "uz")
+LANG_NAMES = {"ru": "Русский", "en": "English", "tg": "Тоҷикӣ", "uz": "O'zbekcha"}
 
 # --------------------------------------------------------------------------- #
 # UI strings
@@ -31,6 +31,7 @@ UI = {
         "prompt_video": "🎬 Пришли <b>видео</b>.",
         "prompt_audio": "🎵 Пришли <b>аудио</b> или голосовое.",
         "prompt_text": "🔳 Пришли <b>текст или ссылку</b> — сделаю QR-код.",
+        "prompt_any": "📎 Пришли <b>любой файл</b>.",
         "stage_prepare": "Готовлю…",
         "stage_process": "Обрабатываю…",
         "stage_send": "Отправляю…",
@@ -91,6 +92,7 @@ UI = {
         "prompt_video": "🎬 Send a <b>video</b>.",
         "prompt_audio": "🎵 Send <b>audio</b> or a voice message.",
         "prompt_text": "🔳 Send <b>text or a link</b> — I'll make a QR code.",
+        "prompt_any": "📎 Send <b>any file</b>.",
         "stage_prepare": "Preparing…",
         "stage_process": "Processing…",
         "stage_send": "Sending…",
@@ -151,6 +153,7 @@ UI = {
         "prompt_video": "🎬 <b>Видео</b> фиристед.",
         "prompt_audio": "🎵 <b>Аудио</b> ё паёми овозӣ фиристед.",
         "prompt_text": "🔳 <b>Матн ё пайванд</b> фиристед — QR-код месозам.",
+        "prompt_any": "📎 <b>Ягон файл</b> фиристед.",
         "stage_prepare": "Омода мекунам…",
         "stage_process": "Коркард мекунам…",
         "stage_send": "Мефиристам…",
@@ -188,6 +191,67 @@ UI = {
             "✏️ Матн фиристед, то ба файл ном диҳед (мисол: файл.pdf)."
         ),
     },
+    "uz": {
+        "choose_language": "🌍 <b>Tilni tanlang</b>\nChoose your language\nВыберите язык",
+        "lang_set": "✅ Til: <b>{name}</b>",
+        "menu_title": "🧰 <b>FileBox</b> — fayl bilan nima qilamiz?\nToifani tanlang 👇",
+        "cat_title": "<b>{cat}</b>\nAsbobni tanlang 👇",
+        "pick_param": "⚙️ Variantni tanlang:",
+        "btn_back": "◀️ Orqaga",
+        "btn_home": "🏠 Menyu",
+        "btn_run": "▶️ Tayyor",
+        "btn_clear": "🗑 Tozalash",
+        "btn_lang": "🌐 Til",
+        "btn_help": "❓ Yordam",
+        "collected": "📎 Yig'ildi: <b>{n}</b>\nYana yuboring yoki <b>«▶️ Tayyor»</b> tugmasini bosing.",
+        "prompt_images": "🖼 <b>Rasmlar</b> yuboring (xohlaganingizcha), keyin <b>«▶️ Tayyor»</b> tugmasini bosing.",
+        "prompt_image": "🖼 <b>Bitta rasm</b> yuboring.",
+        "prompt_pdf": "📄 <b>PDF fayl</b> yuboring.",
+        "prompt_pdfs": "📄 <b>Bir nechta PDF</b> yuboring, keyin <b>«▶️ Tayyor»</b> tugmasini bosing.",
+        "prompt_office": "📝 <b>Hujjat</b> yuboring (Word, Excel, PowerPoint, TXT…).",
+        "prompt_files": "📎 <b>Fayllar</b> (istalgan) yuboring, keyin <b>«▶️ Tayyor»</b> tugmasini bosing.",
+        "prompt_zip": "🗜 <b>ZIP arxiv</b> yuboring.",
+        "prompt_video": "🎬 <b>Video</b> yuboring.",
+        "prompt_audio": "🎵 <b>Audio</b> yoki ovozli xabar yuboring.",
+        "prompt_text": "🔳 <b>Matn yoki havola</b> yuboring — QR-kod yasayman.",
+        "prompt_any": "📎 <b>Istalgan fayl</b> yuboring.",
+        "stage_prepare": "Tayyorlayapman…",
+        "stage_process": "Ishlayapman…",
+        "stage_send": "Yuboryapman…",
+        "progress_frame": "⚙️ <b>{stage}</b>\n\n{bar}  <b>{pct}%</b>",
+        "result_caption": "🎁 Tayyor!",
+        "result_text": "📝 <b>Natija:</b>",
+        "ready_again": "✨ Tayyor! Keyingi asbobni tanlang — /menu",
+        "err_generic": "😕 Ishlab bo'lmadi. Faylni tekshirib, qayta urinib ko'ring.",
+        "err_timeout": "⌛ Ishlov juda uzoq davom etdi va to'xtatildi. Kichikroq fayl yuboring.",
+        "err_rate": "🚦 Bir soatda juda ko'p ishlov. Biroz kuting va qayta urinib ko'ring.",
+        "pay_refunded": "↩️ Vazifa bekor qilindi, shuning uchun yulduzlarni qaytardim. Qaytadan boshlang — /menu",
+        "busy": "⏳ Kuting — men hali oldingi faylni ishlayapman…",
+        "err_too_big_in": "⚠️ Fayl <b>20 MB</b> dan katta — Telegram uni yuklab olishga ruxsat bermaydi. Kichikroq yuboring.",
+        "err_too_big_out": "⚠️ Natija <b>50 MB</b> dan katta — yubora olmayman. Siqib ko'ring yoki kamroq fayl.",
+        "err_wrong_type": "🤔 Fayl turi noto'g'ri. Yuboring: {hint}",
+        "err_no_files": "🤔 Siz hali hech narsa yubormadingiz.",
+        "cleared": "🗑 Tozalandi.",
+        "name_hint": "💡 Chiqadigan <b>fayl nomini</b> yuborishingiz mumkin (masalan, <code>fayl.pdf</code>).",
+        "name_set": "✅ Fayl nomi: <b>{name}</b>",
+        "pay_prompt": "🔒 Ishlov <b>{stars} ⭐</b> turadi. Davom etish uchun to'lang 👇",
+        "pay_title": "FileBox — fayl ishlovi",
+        "pay_desc": "Bitta fayl ishlovi uchun {stars} ⭐ to'lov.",
+        "pay_label": "1 ishlov",
+        "pay_thanks": "✅ To'lov qabul qilindi, rahmat! Ishlayapman…",
+        "help": (
+            "🧰 <b>FileBox</b> — universal fayl ustasi.\n\n"
+            "Qanday ishlatish:\n"
+            "1️⃣ Menyuni oching — /menu\n"
+            "2️⃣ Toifa va asbobni tanlang\n"
+            "3️⃣ Fayl(lar)ni yuboring\n"
+            "4️⃣ Natijani oling 🎁\n\n"
+            "Buyruqlar: /menu · /language · /help\n"
+            "Cheklov: kiruvchi fayl 20 MB gacha, natija 50 MB gacha.\n"
+            "💫 Tanlanganlar uchun bepul; boshqalar uchun — {stars} ⭐ har ishlov.\n"
+            "✏️ Chiqadigan faylga nom berish uchun matn yuboring (masalan, fayl.pdf)."
+        ),
+    },
 }
 
 # --------------------------------------------------------------------------- #
@@ -220,17 +284,47 @@ OPS = {
     "resize_image": {"ru": "📐 Изменить размер", "en": "📐 Resize", "tg": "📐 Тағйири андоза"},
     "images_to_gif": {"ru": "🎞 Фото в GIF", "en": "🎞 Photos to GIF", "tg": "🎞 Акс ба GIF"},
     "strip_exif": {"ru": "🧹 Убрать метаданные", "en": "🧹 Strip metadata", "tg": "🧹 Пок кардани EXIF"},
+    "image_rotate": {"ru": "🔄 Повернуть фото", "en": "🔄 Rotate image", "tg": "🔄 Гардондани акс"},
+    "grayscale": {"ru": "⚫ Чёрно-белое", "en": "⚫ Grayscale", "tg": "⚫ Сиёҳу сафед"},
+    "negative": {"ru": "🎞 Негатив", "en": "🎞 Negative", "tg": "🎞 Негатив"},
     "remove_bg": {"ru": "🪄 Убрать фон", "en": "🪄 Remove background", "tg": "🪄 Хориҷи замина"},
     "files_to_zip": {"ru": "📦 Файлы в ZIP", "en": "📦 Files to ZIP", "tg": "📦 Файлҳо ба ZIP"},
     "unzip": {"ru": "📂 Распаковать ZIP", "en": "📂 Unzip", "tg": "📂 Кушодани ZIP"},
     "text_to_qr": {"ru": "🔳 Текст в QR", "en": "🔳 Text to QR", "tg": "🔳 Матн ба QR"},
     "qr_to_text": {"ru": "📷 QR в текст", "en": "📷 QR to text", "tg": "📷 QR ба матн"},
     "ocr_image": {"ru": "👁 Текст с фото", "en": "👁 Image to text", "tg": "👁 Матн аз акс"},
+    "file_hash": {"ru": "#️⃣ Хэш файла", "en": "#️⃣ File hash", "tg": "#️⃣ Ҳэши файл"},
     "video_to_gif": {"ru": "🎥 Видео в GIF", "en": "🎥 Video to GIF", "tg": "🎥 Видео ба GIF"},
     "video_to_audio": {"ru": "🔇 Видео в MP3", "en": "🔇 Video to MP3", "tg": "🔇 Видео ба MP3"},
     "compress_video": {"ru": "🗜 Сжать видео", "en": "🗜 Compress video", "tg": "🗜 Фишурдани видео"},
     "audio_convert": {"ru": "🎵 Конверт. аудио", "en": "🎵 Convert audio", "tg": "🎵 Табдили аудио"},
 }
+
+# Uzbek (beta) labels merged into CATS/OPS
+CATS_UZ = {
+    "pdf": "📄 PDF", "office": "📝 Hujjatlar", "image": "🖼 Rasmlar",
+    "archive": "🗜 Arxivlar", "utils": "🔧 Vositalar", "media": "🎬 Media",
+}
+OPS_UZ = {
+    "photos_to_pdf": "🖼→📄 Rasm → PDF", "pdf_to_images": "📄→🖼 PDF → rasm",
+    "merge_pdf": "🔗 PDF birlashtirish", "split_pdf": "✂️ PDF bo'lish",
+    "compress_pdf": "🗜 PDF siqish", "rotate_pdf": "🔄 PDF burish",
+    "pdf_to_text": "🔤 PDF → matn", "office_to_pdf": "📘 Office → PDF",
+    "pdf_to_word": "📄→📘 PDF → Word", "image_convert": "🔄 Formatni o'zgartirish",
+    "compress_image": "🗜 Rasmni siqish", "resize_image": "📐 O'lchamni o'zgartirish",
+    "images_to_gif": "🎞 Rasm → GIF", "strip_exif": "🧹 Metadatani tozalash",
+    "image_rotate": "🔄 Rasmni burish", "grayscale": "⚫ Oq-qora",
+    "negative": "🎞 Negativ", "remove_bg": "🪄 Fonni olib tashlash",
+    "files_to_zip": "📦 Fayl → ZIP", "unzip": "📂 ZIP ochish",
+    "text_to_qr": "🔳 Matn → QR", "qr_to_text": "📷 QR → matn",
+    "ocr_image": "👁 Rasmdan matn", "file_hash": "#️⃣ Fayl hash",
+    "video_to_gif": "🎥 Video → GIF", "video_to_audio": "🔇 Video → MP3",
+    "compress_video": "🗜 Video siqish", "audio_convert": "🎵 Audio o'zgartirish",
+}
+for _k, _v in CATS_UZ.items():
+    CATS.setdefault(_k, {})["uz"] = _v
+for _k, _v in OPS_UZ.items():
+    OPS.setdefault(_k, {})["uz"] = _v
 
 
 # --------------------------------------------------------------------------- #
@@ -262,4 +356,6 @@ def detect_lang(code):
         return "ru"
     if code.startswith("tg") or code.startswith("tj"):
         return "tg"
+    if code.startswith("uz"):
+        return "uz"
     return "en"

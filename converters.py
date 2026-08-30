@@ -249,6 +249,45 @@ def remove_bg(inputs, out, params):
     return [dst]
 
 
+def image_rotate(inputs, out, params):
+    angle = int(params.get("angle", "90"))
+    im = _open_image(inputs[0])
+    im = im.rotate(-angle, expand=True)  # clockwise
+    ext = "png" if im.mode in ("RGBA", "P") else "jpg"
+    dst = out / f"rotated.{ext}"
+    im.save(dst, "PNG" if ext == "png" else "JPEG", quality=95)
+    return [dst]
+
+
+def grayscale(inputs, out, params):
+    im = _open_image(inputs[0]).convert("L").convert("RGB")
+    dst = out / "grayscale.jpg"
+    im.save(dst, "JPEG", quality=95)
+    return [dst]
+
+
+def negative(inputs, out, params):
+    from PIL import ImageOps
+    im = _open_image(inputs[0]).convert("RGB")
+    dst = out / "negative.jpg"
+    ImageOps.invert(im).save(dst, "JPEG", quality=95)
+    return [dst]
+
+
+def file_hash(inputs, out, params):
+    import hashlib
+    md5, sha = hashlib.md5(), hashlib.sha256()
+    with open(inputs[0], "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            md5.update(chunk)
+            sha.update(chunk)
+    dst = out / "hashes.txt"
+    dst.write_text(
+        f"MD5:    {md5.hexdigest()}\nSHA-256: {sha.hexdigest()}\n", encoding="utf-8"
+    )
+    return [dst]
+
+
 # --------------------------------------------------------------------------- #
 # Archives
 # --------------------------------------------------------------------------- #
@@ -365,7 +404,7 @@ MULTI_INPUTS = {"images", "pdfs", "files"}
 TEXT_INPUTS = {"text"}
 
 # operations that return plain text to show inline
-TEXT_OUTPUT_OPS = {"pdf_to_text", "qr_to_text", "ocr_image"}
+TEXT_OUTPUT_OPS = {"pdf_to_text", "qr_to_text", "ocr_image", "file_hash"}
 # operations whose single output is an animated GIF
 GIF_OUTPUT_OPS = {"images_to_gif", "video_to_gif"}
 
@@ -387,6 +426,10 @@ OPERATIONS = [
     {"id": "resize_image", "cat": "image", "input": "image", "fn": resize_image, "param": "max"},
     {"id": "images_to_gif", "cat": "image", "input": "images", "fn": images_to_gif},
     {"id": "strip_exif", "cat": "image", "input": "image", "fn": strip_exif},
+    {"id": "image_rotate", "cat": "image", "input": "image", "fn": image_rotate, "param": "angle"},
+    {"id": "grayscale", "cat": "image", "input": "image", "fn": grayscale},
+    {"id": "negative", "cat": "image", "input": "image", "fn": negative},
+    {"id": "remove_bg", "cat": "image", "input": "image", "fn": remove_bg},
     # Archives
     {"id": "files_to_zip", "cat": "archive", "input": "files", "fn": files_to_zip},
     {"id": "unzip", "cat": "archive", "input": "zip", "fn": unzip},
@@ -394,6 +437,7 @@ OPERATIONS = [
     {"id": "text_to_qr", "cat": "utils", "input": "text", "fn": text_to_qr},
     {"id": "qr_to_text", "cat": "utils", "input": "image", "fn": qr_to_text},
     {"id": "ocr_image", "cat": "utils", "input": "image", "fn": ocr_image},
+    {"id": "file_hash", "cat": "utils", "input": "any", "fn": file_hash},
     # Media
     {"id": "video_to_gif", "cat": "media", "input": "video", "fn": video_to_gif},
     {"id": "video_to_audio", "cat": "media", "input": "video", "fn": video_to_audio},

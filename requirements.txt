@@ -9,3 +9,5 @@ pdf2docx>=0.5.8
 qrcode[pil]>=7.4
 pyzbar>=0.1.9
 pytesseract>=0.3.13
+rembg>=2.0
+onnxruntime>=1.17
