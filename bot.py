@@ -24,7 +24,9 @@ from aiogram.types import (
     FSInputFile,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    LabeledPrice,
     Message,
+    PreCheckoutQuery,
 )
 
 import converters as C
@@ -40,6 +42,14 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN", "").strip()
 BASE_DIR = Path(tempfile.gettempdir()) / "filebox"
 MAX_DOWNLOAD = 20 * 1024 * 1024   # Telegram getFile limit (incoming)
 MAX_SEND = 49 * 1024 * 1024       # Telegram send limit (outgoing), small margin
+
+# Monetization: whitelisted users are free & unlimited; everyone else pays Stars.
+FREE_IDS = {x.strip() for x in os.environ.get("FREE_IDS", "").split(",") if x.strip()}
+PRICE_STARS = int(os.environ.get("PRICE_STARS", "1") or "1")
+
+
+def is_free(user_id):
+    return str(user_id) in FREE_IDS
 
 IMG_EXT = {"jpg", "jpeg", "png", "webp", "bmp", "tiff", "tif", "gif", "heic", "heif"}
 OFFICE_EXT = {"doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp", "rtf", "txt", "csv"}
@@ -200,6 +210,47 @@ async def on_help(message: Message):
     await message.answer(t(s["lang"], "help"))
 
 
+@dp.message(Command("id"))
+async def on_id(message: Message):
+    await message.answer(f"🆔 <code>{message.from_user.id}</code>")
+
+
+# --------------------------------------------------------------------------- #
+# payments (Telegram Stars)
+# --------------------------------------------------------------------------- #
+async def gate_and_run(message: Message, s, user_id):
+    """Free users run instantly; others must pay Stars first."""
+    if is_free(user_id):
+        await run_current(message, s)
+    else:
+        await request_payment(message, s)
+
+
+async def request_payment(message: Message, s):
+    lang = s["lang"]
+    await message.answer(t(lang, "pay_prompt", stars=PRICE_STARS))
+    await message.answer_invoice(
+        title=t(lang, "pay_title"),
+        description=t(lang, "pay_desc", stars=PRICE_STARS),
+        payload=f"filebox:{s.get('op')}",
+        currency="XTR",
+        prices=[LabeledPrice(label=t(lang, "pay_label"), amount=PRICE_STARS)],
+        provider_token="",
+    )
+
+
+@dp.pre_checkout_query()
+async def on_pre_checkout(q: PreCheckoutQuery):
+    await q.answer(ok=True)
+
+
+@dp.message(F.successful_payment)
+async def on_paid(message: Message):
+    s = get_session(message.from_user.id, detect_lang(message.from_user.language_code))
+    await message.answer(t(s["lang"], "pay_thanks"))
+    await run_current(message, s)
+
+
 async def open_menu(message: Message, s):
     reset_job(s)
     s["view"] = "menu"
@@ -343,7 +394,7 @@ async def cb_run(cb: CallbackQuery):
     s = get_session(cb.from_user.id)
     _cancel_panel(s)
     await cb.answer()
-    await run_current(cb.message, s)
+    await gate_and_run(cb.message, s, cb.from_user.id)
 
 
 # --------------------------------------------------------------------------- #
@@ -459,7 +510,7 @@ async def on_media(message: Message):
     if op["input"] in C.MULTI_INPUTS:
         _schedule_panel(message, s)
     else:
-        await run_current(message, s)
+        await gate_and_run(message, s, message.from_user.id)
 
 
 @dp.message(F.text)
@@ -469,7 +520,7 @@ async def on_text(message: Message):
     if s.get("view") == "collect" and op:
         if op["input"] == "text":
             s["params"]["text"] = message.text
-            await run_current(message, s)
+            await gate_and_run(message, s, message.from_user.id)
         else:
             # any text while collecting = custom output file name
             raw = (message.text or "").strip()

@@ -45,5 +45,7 @@ jobs:
       - name: Run FileBox (real-time polling, graceful handoff)
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          FREE_IDS: ${{ vars.FREE_IDS }}
+          PRICE_STARS: "1"
           RUN_SECONDS: "20700"
         run: python bot.py

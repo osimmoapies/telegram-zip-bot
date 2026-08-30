@@ -46,6 +46,11 @@ UI = {
         "cleared": "🗑 Очищено.",
         "name_hint": "💡 Можешь прислать своё <b>название файла</b> (например, <code>моё.pdf</code>).",
         "name_set": "✅ Имя файла: <b>{name}</b>",
+        "pay_prompt": "🔒 Обработка стоит <b>{stars} ⭐</b>. Оплати, чтобы продолжить 👇",
+        "pay_title": "FileBox — обработка файла",
+        "pay_desc": "Оплата {stars} ⭐ за одну обработку файла.",
+        "pay_label": "1 обработка",
+        "pay_thanks": "✅ Оплата получена, спасибо! Обрабатываю…",
         "help": (
             "🧰 <b>FileBox</b> — универсальный файловый мастер.\n\n"
             "Как пользоваться:\n"
@@ -95,6 +100,11 @@ UI = {
         "cleared": "🗑 Cleared.",
         "name_hint": "💡 You can send a custom <b>file name</b> (e.g. <code>my.pdf</code>).",
         "name_set": "✅ File name: <b>{name}</b>",
+        "pay_prompt": "🔒 Processing costs <b>{stars} ⭐</b>. Pay to continue 👇",
+        "pay_title": "FileBox — file processing",
+        "pay_desc": "Pay {stars} ⭐ for one file processing.",
+        "pay_label": "1 processing",
+        "pay_thanks": "✅ Payment received, thanks! Processing…",
         "help": (
             "🧰 <b>FileBox</b> — your universal file master.\n\n"
             "How to use:\n"
@@ -144,6 +154,11 @@ UI = {
         "cleared": "🗑 Тоза шуд.",
         "name_hint": "💡 Метавонед <b>номи файл</b>-ро фиристед (мисол: <code>ман.pdf</code>).",
         "name_set": "✅ Номи файл: <b>{name}</b>",
+        "pay_prompt": "🔒 Коркард <b>{stars} ⭐</b> меарзад. Барои идома пардохт кунед 👇",
+        "pay_title": "FileBox — коркарди файл",
+        "pay_desc": "Пардохти {stars} ⭐ барои як коркард.",
+        "pay_label": "1 коркард",
+        "pay_thanks": "✅ Пардохт қабул шуд, ташаккур! Коркард мекунам…",
         "help": (
             "🧰 <b>FileBox</b> — устоди универсалии файлҳо.\n\n"
             "Тарзи истифода:\n"
