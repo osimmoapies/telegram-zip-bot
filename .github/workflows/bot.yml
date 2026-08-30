@@ -1,0 +1,49 @@
+name: filebox
+
+# Keeps FileBox alive 24/7 on GitHub Actions (free).
+#   * Real-time polling — responds every second.
+#   * Each run works ~5h45m, then exits cleanly before GitHub's 6h cap.
+#   * A cron "heartbeat" keeps the NEXT run queued so it takes over quickly.
+#   * `concurrency` guarantees only ONE poller runs at a time (Telegram 409).
+#     Messages sent during a handoff are NOT lost — Telegram queues them.
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "*/5 * * * *"
+
+concurrency:
+  group: filebox-singleton
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install conversion engines
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libreoffice poppler-utils ghostscript ffmpeg \
+            tesseract-ocr tesseract-ocr-rus tesseract-ocr-eng \
+            zbar-tools libzbar0 libheif1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run FileBox (real-time polling, graceful handoff)
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          RUN_SECONDS: "20700"
+        run: python bot.py
