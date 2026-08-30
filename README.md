@@ -1,91 +1,53 @@
-# 📸➡️🗜 Zip Photo Bot
+# 🧰 FileBox — универсальный файловый Telegram-бот
 
-Telegram-бот, который принимает **сколько угодно фотографий** и по кнопке **«✅ Готово»** отдаёт один **.zip** архив.
-Работает 24/7 в облаке (даже когда компьютер выключен). Три языка: 🇷🇺 Русский · 🇬🇧 English · 🇹🇯 Тоҷикӣ.
+Пришли файл — получи результат. **23 инструмента**, красивое меню, 3 языка (🇷🇺 🇬🇧 🇹🇯), работает 24/7 бесплатно на GitHub Actions.
 
-> A Telegram bot: send as many photos as you want, tap **Done**, get a **.zip** back. Runs 24/7 in the cloud. Multilingual (RU/EN/TG).
+> Send a file — get the result. 23 tools, pretty menu, RU/EN/TG, runs 24/7 free on GitHub Actions.
 
----
+## ✨ Что умеет
 
-## 🇷🇺 Русский
+- **📄 PDF:** фото→PDF, PDF→фото, объединить, разделить, сжать, повернуть, PDF→текст
+- **📝 Документы:** Word/Excel/PowerPoint→PDF, PDF→Word
+- **🖼 Картинки:** конвертация (JPG/PNG/WEBP/HEIC…), сжать, изменить размер, фото→GIF, убрать метаданные
+- **🗜 Архивы:** файлы→ZIP, распаковать ZIP
+- **🔧 Утилиты:** текст→QR, QR→текст, OCR (текст с фото, рус+eng)
+- **🎬 Медиа:** видео→GIF, видео→MP3, сжать видео, конвертация аудио
 
-### Что делает
-1. Пользователь открывает бота и выбирает язык.
-2. Кидает любое количество фото 📸 (бот показывает счётчик «Собрано: N»).
-3. Нажимает **«✅ Готово»** — бот присылает `.zip` со всеми фото.
-4. Кнопка **«🗑 Очистить»** сбрасывает набор, **«🌐 Язык»** меняет язык.
+Лимиты Telegram: входящий файл до **20 МБ**, результат до **50 МБ**.
 
-### Шаг 1. Создать бота и получить токен
-1. Открой в Telegram [@BotFather](https://t.me/BotFather).
-2. Отправь `/newbot`, придумай имя и username (заканчивается на `bot`).
-3. BotFather пришлёт **токен** вида `123456:ABC...` — сохрани его.
+## 🚀 Хостинг: GitHub Actions (бесплатно, 24/7)
 
-### Шаг 2. Задеплоить (бесплатно, работает 24/7)
+Бот живёт прямо в этом репозитории: воркфлоу `.github/workflows/bot.yml` запускает бота в режиме polling, работает ~5ч45м и плавно передаёт смену следующему запуску (без потери сообщений).
 
-**Вариант A — Koyeb (рекомендую: бесплатно, без карты, не «засыпает»)**
-1. Залей этот код на GitHub (см. ниже «Публикация на GitHub»).
-2. Зайди на [koyeb.com](https://www.koyeb.com) → **Create Service** → **GitHub** → выбери репозиторий.
-3. Тип билда: **Dockerfile**. Порт: **8000**.
-4. В разделе **Environment variables** добавь `BOT_TOKEN` = твой токен.
-5. **Deploy**. Через минуту бот в сети. ✅
+**Активация:**
+1. Создай бота у [@BotFather](https://t.me/BotFather) → получи токен.
+2. Добавь секрет: **Settings → Secrets and variables → Actions → New repository secret**, имя `BOT_TOKEN`, значение — токен.
+3. Репозиторий должен быть **публичным** (бесплатные безлимитные минуты Actions).
+4. **Actions → filebox → Run workflow** — бот запускается.
 
-**Вариант B — Render (бесплатно, но «засыпает» и просыпается ~30 сек при новом сообщении)**
-1. Залей код на GitHub.
-2. [render.com](https://render.com) → **New** → **Blueprint** → выбери репозиторий (там уже есть `render.yaml`).
-3. Добавь переменную `BOT_TOKEN`. Render сам включит режим webhook.
+> ⚠️ Каждые ~6 часов раннер пересоздаётся и заново ставит движки (LibreOffice и др.) — пересменка занимает ~1-2 мин, 4 раза в сутки. Сообщения в этот момент не теряются: Telegram их запоминает.
 
-**Вариант C — Railway** (`railway.app`): New Project → Deploy from GitHub → добавь `BOT_TOKEN`. Просто, но платно после пробного кредита.
+## 🖥 Локальный запуск / другой хостинг
 
-### Запуск локально (для теста)
 ```bash
+# нужны системные движки: libreoffice poppler-utils ghostscript ffmpeg
+#                         tesseract-ocr tesseract-ocr-rus zbar-tools libheif1
 pip install -r requirements.txt
-export BOT_TOKEN=твой_токен      # Windows: set BOT_TOKEN=...
+export BOT_TOKEN=твой_токен
 python bot.py
 ```
-
-### Публикация на GitHub
+Или через Docker (все движки уже внутри):
 ```bash
-cd telegram-zip-bot
-git init && git add . && git commit -m "Zip photo bot"
-gh repo create telegram-zip-bot --public --source=. --push
+docker build -t filebox . && docker run -e BOT_TOKEN=токен filebox
 ```
 
----
+## 🏷 Брендинг
+- Имя: **FileBox 🧰**
+- Аватар: `assets/avatar.png` (поставить в BotFather: `/setuserpic`)
+- Команды: /menu · /language · /help
 
-## 🇬🇧 English
-
-**What it does:** users send any number of photos, tap **Done**, and get a single `.zip`.
-
-**1) Get a token** from [@BotFather](https://t.me/BotFather) (`/newbot`).
-**2) Deploy free & always-on:**
-- **Koyeb** (recommended, free, no card): Create Service → GitHub → Dockerfile → port `8000` → add env `BOT_TOKEN` → Deploy.
-- **Render** (free, sleeps): New → Blueprint (uses `render.yaml`) → add `BOT_TOKEN`.
-- **Railway**: Deploy from GitHub → add `BOT_TOKEN`.
-**3) Run locally:** `pip install -r requirements.txt` then `BOT_TOKEN=... python bot.py`.
-
----
-
-## 🇹🇯 Тоҷикӣ
-
-**Чӣ кор мекунад:** корбар ҳар қадар расм мефиристад, тугмаи **«Тайёр»**-ро зер мекунад ва як файли `.zip` мегирад.
-
-**1) Токен гиред** аз [@BotFather](https://t.me/BotFather) (`/newbot`).
-**2) Ройгон ва доимӣ ҷойгир кунед:**
-- **Koyeb** (тавсия, ройгон, бе корт): Create Service → GitHub → Dockerfile → порт `8000` → тағйирёбандаи `BOT_TOKEN`-ро илова кунед → Deploy.
-- **Render** (ройгон, вале «хоб меравад»): New → Blueprint (`render.yaml`) → `BOT_TOKEN`.
-**3) Дар компютер:** `pip install -r requirements.txt`, баъд `BOT_TOKEN=... python bot.py`.
-
----
-
-## ⚙️ Переменные окружения / Environment variables
-
-| Переменная      | Обязательна | Описание |
-|-----------------|:-----------:|----------|
-| `BOT_TOKEN`     | ✅ да       | Токен от @BotFather |
-| `PORT`          | авто        | Порт health/webhook сервера (задаёт хостинг) |
-| `WEBHOOK_URL`   | нет         | Включает режим webhook вручную (на Render определяется автоматически) |
-
-## ℹ️ Заметки
-- Лимит Telegram на отправку файла — **50 МБ**. Если фото много и они тяжёлые, бот попросит отправить меньше за раз.
-- Фото хранятся во временной папке только до отправки архива, затем удаляются.
-- Сессии хранятся в памяти: после перезапуска хостинга незавершённые наборы очищаются (это нормально).
+## 🗂 Структура
+- `bot.py` — меню, навигация, сбор файлов, прогресс, отправка
+- `converters.py` — все конвертеры + реестр операций
+- `i18n.py` — переводы RU/EN/TG
+- `.github/workflows/bot.yml` — хостинг 24/7

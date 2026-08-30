@@ -1,154 +1,221 @@
 # -*- coding: utf-8 -*-
-"""Translations for the Zip Photo Bot: Russian, English, Tajik."""
+"""Translations for FileBox — Russian, English, Tajik. Clear, simple, no errors."""
 
+LANGS = ("ru", "en", "tg")
 LANG_NAMES = {"ru": "Русский", "en": "English", "tg": "Тоҷикӣ"}
 
-TEXTS = {
+# --------------------------------------------------------------------------- #
+# UI strings
+# --------------------------------------------------------------------------- #
+UI = {
     "ru": {
         "choose_language": "🌍 <b>Выберите язык</b>\nChoose your language\nЗабонро интихоб кунед",
-        "lang_set": "✅ Язык установлен: <b>{name}</b>",
-        "instructions": (
-            "👋 <b>Привет!</b>\n\n"
-            "Отправь мне сколько угодно фотографий 📸, а когда закончишь — "
-            "нажми <b>«✅ Готово»</b>.\n\n"
-            "Я соберу всё в один <b>.zip</b> архив и пришлю тебе 🎁"
-        ),
-        "collected": (
-            "📸 Собрано фото: <b>{n}</b>\n\n"
-            "Продолжай отправлять или нажми <b>«✅ Готово»</b>."
-        ),
-        "btn_done": "✅ Готово",
+        "lang_set": "✅ Язык: <b>{name}</b>",
+        "menu_title": "🧰 <b>FileBox</b> — что сделаем с файлом?\nВыбери категорию 👇",
+        "cat_title": "<b>{cat}</b>\nВыбери инструмент 👇",
+        "pick_param": "⚙️ Выбери вариант:",
+        "btn_back": "◀️ Назад",
+        "btn_home": "🏠 В меню",
+        "btn_run": "▶️ Готово",
         "btn_clear": "🗑 Очистить",
         "btn_lang": "🌐 Язык",
-        "no_photos": "🤔 Ты ещё не отправил ни одной фотографии.\nПросто пришли мне фото 📸",
-        "cleared": "🗑 Готово, всё очищено. Можешь начинать заново 📸",
-        "packing": "📦 Упаковываю фотографии в архив…",
-        "packing_frame": "🗜 <b>{stage}</b>\n\n{bar}  <b>{pct}%</b>",
-        "stage_collect": "Собираю фотографии…",
-        "stage_zip": "Сжимаю в архив…",
-        "stage_send": "Отправляю тебе…",
-        "done_caption": "🎁 Готово! Твой архив с <b>{n}</b> фото 📸",
-        "ready_again": "✨ Можешь отправлять следующую пачку фото!",
-        "too_large": (
-            "⚠️ Архив получился больше 50 МБ — Telegram не даёт отправить такой файл.\n"
-            "Пришли, пожалуйста, меньше фотографий за один раз."
-        ),
-        "not_a_photo": "🖼 Это не похоже на изображение. Пришли фото 📸",
-        "send_photos_hint": "📸 Пришли мне фотографии, а потом нажми <b>«✅ Готово»</b>.",
+        "btn_help": "❓ Помощь",
+        "collected": "📎 Собрано: <b>{n}</b>\nПришли ещё или нажми <b>«▶️ Готово»</b>.",
+        "prompt_images": "🖼 Пришли <b>фотографии</b> (сколько нужно), потом нажми <b>«▶️ Готово»</b>.",
+        "prompt_image": "🖼 Пришли <b>одно изображение</b>.",
+        "prompt_pdf": "📄 Пришли <b>PDF-файл</b>.",
+        "prompt_pdfs": "📄 Пришли <b>несколько PDF</b>, потом нажми <b>«▶️ Готово»</b>.",
+        "prompt_office": "📝 Пришли <b>документ</b> (Word, Excel, PowerPoint, TXT…).",
+        "prompt_files": "📎 Пришли <b>файлы</b> (любые), потом нажми <b>«▶️ Готово»</b>.",
+        "prompt_zip": "🗜 Пришли <b>ZIP-архив</b>.",
+        "prompt_video": "🎬 Пришли <b>видео</b>.",
+        "prompt_audio": "🎵 Пришли <b>аудио</b> или голосовое.",
+        "prompt_text": "🔳 Пришли <b>текст или ссылку</b> — сделаю QR-код.",
+        "stage_prepare": "Готовлю…",
+        "stage_process": "Обрабатываю…",
+        "stage_send": "Отправляю…",
+        "progress_frame": "⚙️ <b>{stage}</b>\n\n{bar}  <b>{pct}%</b>",
+        "result_caption": "🎁 Готово!",
+        "result_text": "📝 <b>Результат:</b>",
+        "ready_again": "✨ Готово! Выбери следующий инструмент — /menu",
+        "err_generic": "😕 Не получилось обработать. Проверь файл и попробуй ещё раз.\n<code>{err}</code>",
+        "err_too_big_in": "⚠️ Файл больше <b>20 МБ</b> — Telegram не даёт мне его скачать. Пришли поменьше.",
+        "err_too_big_out": "⚠️ Результат больше <b>50 МБ</b> — не могу отправить. Попробуй сжать/меньше файлов.",
+        "err_wrong_type": "🤔 Не тот тип файла. {hint}",
+        "err_no_files": "🤔 Ты ещё ничего не прислал.",
+        "cleared": "🗑 Очищено.",
         "help": (
-            "ℹ️ <b>Как пользоваться</b>\n\n"
-            "1️⃣ Отправь мне одну или несколько фотографий 📸\n"
-            "2️⃣ Нажми <b>«✅ Готово»</b>\n"
-            "3️⃣ Получи <b>.zip</b> архив со всеми фото 🎁\n\n"
-            "Команды:\n"
-            "/start — начать заново\n"
-            "/language — сменить язык\n"
-            "/help — эта справка"
+            "🧰 <b>FileBox</b> — универсальный файловый мастер.\n\n"
+            "Как пользоваться:\n"
+            "1️⃣ Открой меню — /menu\n"
+            "2️⃣ Выбери категорию и инструмент\n"
+            "3️⃣ Пришли файл(ы)\n"
+            "4️⃣ Получи готовый результат 🎁\n\n"
+            "Команды: /menu · /language · /help\n"
+            "Лимит: входящий файл до 20 МБ, результат до 50 МБ."
         ),
     },
     "en": {
         "choose_language": "🌍 <b>Choose your language</b>\nВыберите язык\nЗабонро интихоб кунед",
-        "lang_set": "✅ Language set: <b>{name}</b>",
-        "instructions": (
-            "👋 <b>Hi there!</b>\n\n"
-            "Send me as many photos 📸 as you like. When you're done — "
-            "tap <b>“✅ Done”</b>.\n\n"
-            "I'll pack everything into a single <b>.zip</b> archive and send it back 🎁"
-        ),
-        "collected": (
-            "📸 Photos collected: <b>{n}</b>\n\n"
-            "Keep sending, or tap <b>“✅ Done”</b>."
-        ),
-        "btn_done": "✅ Done",
+        "lang_set": "✅ Language: <b>{name}</b>",
+        "menu_title": "🧰 <b>FileBox</b> — what shall we do with your file?\nPick a category 👇",
+        "cat_title": "<b>{cat}</b>\nPick a tool 👇",
+        "pick_param": "⚙️ Choose an option:",
+        "btn_back": "◀️ Back",
+        "btn_home": "🏠 Menu",
+        "btn_run": "▶️ Done",
         "btn_clear": "🗑 Clear",
         "btn_lang": "🌐 Language",
-        "no_photos": "🤔 You haven't sent any photos yet.\nJust send me a photo 📸",
-        "cleared": "🗑 Done, everything is cleared. You can start again 📸",
-        "packing": "📦 Packing your photos into an archive…",
-        "packing_frame": "🗜 <b>{stage}</b>\n\n{bar}  <b>{pct}%</b>",
-        "stage_collect": "Collecting photos…",
-        "stage_zip": "Compressing into archive…",
-        "stage_send": "Sending it to you…",
-        "done_caption": "🎁 Done! Your archive with <b>{n}</b> photos 📸",
-        "ready_again": "✨ You can send the next batch of photos!",
-        "too_large": (
-            "⚠️ The archive is larger than 50 MB — Telegram won't let me send such a file.\n"
-            "Please send fewer photos at once."
-        ),
-        "not_a_photo": "🖼 That doesn't look like an image. Please send a photo 📸",
-        "send_photos_hint": "📸 Send me photos, then tap <b>“✅ Done”</b>.",
+        "btn_help": "❓ Help",
+        "collected": "📎 Collected: <b>{n}</b>\nSend more or tap <b>“▶️ Done”</b>.",
+        "prompt_images": "🖼 Send <b>photos</b> (as many as you like), then tap <b>“▶️ Done”</b>.",
+        "prompt_image": "🖼 Send <b>one image</b>.",
+        "prompt_pdf": "📄 Send a <b>PDF file</b>.",
+        "prompt_pdfs": "📄 Send <b>several PDFs</b>, then tap <b>“▶️ Done”</b>.",
+        "prompt_office": "📝 Send a <b>document</b> (Word, Excel, PowerPoint, TXT…).",
+        "prompt_files": "📎 Send <b>files</b> (any), then tap <b>“▶️ Done”</b>.",
+        "prompt_zip": "🗜 Send a <b>ZIP archive</b>.",
+        "prompt_video": "🎬 Send a <b>video</b>.",
+        "prompt_audio": "🎵 Send <b>audio</b> or a voice message.",
+        "prompt_text": "🔳 Send <b>text or a link</b> — I'll make a QR code.",
+        "stage_prepare": "Preparing…",
+        "stage_process": "Processing…",
+        "stage_send": "Sending…",
+        "progress_frame": "⚙️ <b>{stage}</b>\n\n{bar}  <b>{pct}%</b>",
+        "result_caption": "🎁 Done!",
+        "result_text": "📝 <b>Result:</b>",
+        "ready_again": "✨ Done! Pick the next tool — /menu",
+        "err_generic": "😕 Couldn't process it. Check the file and try again.\n<code>{err}</code>",
+        "err_too_big_in": "⚠️ The file is over <b>20 MB</b> — Telegram won't let me download it. Send a smaller one.",
+        "err_too_big_out": "⚠️ The result is over <b>50 MB</b> — I can't send it. Try compressing / fewer files.",
+        "err_wrong_type": "🤔 Wrong file type. {hint}",
+        "err_no_files": "🤔 You haven't sent anything yet.",
+        "cleared": "🗑 Cleared.",
         "help": (
-            "ℹ️ <b>How to use</b>\n\n"
-            "1️⃣ Send me one or more photos 📸\n"
-            "2️⃣ Tap <b>“✅ Done”</b>\n"
-            "3️⃣ Get a <b>.zip</b> archive with all your photos 🎁\n\n"
-            "Commands:\n"
-            "/start — start over\n"
-            "/language — change language\n"
-            "/help — this help"
+            "🧰 <b>FileBox</b> — your universal file master.\n\n"
+            "How to use:\n"
+            "1️⃣ Open the menu — /menu\n"
+            "2️⃣ Pick a category and a tool\n"
+            "3️⃣ Send your file(s)\n"
+            "4️⃣ Get the result 🎁\n\n"
+            "Commands: /menu · /language · /help\n"
+            "Limits: incoming file up to 20 MB, result up to 50 MB."
         ),
     },
     "tg": {
         "choose_language": "🌍 <b>Забонро интихоб кунед</b>\nChoose your language\nВыберите язык",
-        "lang_set": "✅ Забон интихоб шуд: <b>{name}</b>",
-        "instructions": (
-            "👋 <b>Салом!</b>\n\n"
-            "Ҳар қадаре, ки хоҳед расм 📸 фиристед, вақте ки тамом шуд — "
-            "тугмаи <b>«✅ Тайёр»</b>-ро зер кунед.\n\n"
-            "Ман ҳамаашро дар як файли <b>.zip</b> ҷамъ карда, ба шумо мефиристам 🎁"
-        ),
-        "collected": (
-            "📸 Расмҳои ҷамъшуда: <b>{n}</b>\n\n"
-            "Давом диҳед ё тугмаи <b>«✅ Тайёр»</b>-ро зер кунед."
-        ),
-        "btn_done": "✅ Тайёр",
+        "lang_set": "✅ Забон: <b>{name}</b>",
+        "menu_title": "🧰 <b>FileBox</b> — бо файл чӣ кор кунем?\nКатегорияро интихоб кунед 👇",
+        "cat_title": "<b>{cat}</b>\nАбзорро интихоб кунед 👇",
+        "pick_param": "⚙️ Вариантро интихоб кунед:",
+        "btn_back": "◀️ Бозгашт",
+        "btn_home": "🏠 Меню",
+        "btn_run": "▶️ Тайёр",
         "btn_clear": "🗑 Тоза кардан",
         "btn_lang": "🌐 Забон",
-        "no_photos": "🤔 Шумо ҳанӯз ягон расм нафиристодед.\nФақат ба ман расм фиристед 📸",
-        "cleared": "🗑 Тайёр, ҳамааш тоза шуд. Метавонед аз нав оғоз кунед 📸",
-        "packing": "📦 Расмҳо бастабандӣ шуда истодаанд…",
-        "packing_frame": "🗜 <b>{stage}</b>\n\n{bar}  <b>{pct}%</b>",
-        "stage_collect": "Расмҳо ҷамъ шуда истодаанд…",
-        "stage_zip": "Ба архив фишурда истодаам…",
-        "stage_send": "Ба шумо фиристода истодаам…",
-        "done_caption": "🎁 Тайёр! Архиви шумо бо <b>{n}</b> расм 📸",
-        "ready_again": "✨ Метавонед дастаи навбатии расмҳоро фиристед!",
-        "too_large": (
-            "⚠️ Ҳаҷми архив аз 50 МБ зиёд шуд — Telegram чунин файлро намефиристад.\n"
-            "Лутфан, дар як маротиба камтар расм фиристед."
-        ),
-        "not_a_photo": "🖼 Ин ба расм монанд нест. Лутфан расм фиристед 📸",
-        "send_photos_hint": "📸 Ба ман расм фиристед, баъд тугмаи <b>«✅ Тайёр»</b>-ро зер кунед.",
+        "btn_help": "❓ Кӯмак",
+        "collected": "📎 Ҷамъшуда: <b>{n}</b>\nБоз фиристед ё <b>«▶️ Тайёр»</b>-ро зер кунед.",
+        "prompt_images": "🖼 <b>Расмҳо</b> фиристед (ҳар қадар лозим), баъд <b>«▶️ Тайёр»</b>-ро зер кунед.",
+        "prompt_image": "🖼 <b>Як расм</b> фиристед.",
+        "prompt_pdf": "📄 Файли <b>PDF</b> фиристед.",
+        "prompt_pdfs": "📄 <b>Якчанд PDF</b> фиристед, баъд <b>«▶️ Тайёр»</b>-ро зер кунед.",
+        "prompt_office": "📝 <b>Ҳуҷҷат</b> фиристед (Word, Excel, PowerPoint, TXT…).",
+        "prompt_files": "📎 <b>Файлҳо</b> (ҳар гуна) фиристед, баъд <b>«▶️ Тайёр»</b>-ро зер кунед.",
+        "prompt_zip": "🗜 <b>Архиви ZIP</b> фиристед.",
+        "prompt_video": "🎬 <b>Видео</b> фиристед.",
+        "prompt_audio": "🎵 <b>Аудио</b> ё паёми овозӣ фиристед.",
+        "prompt_text": "🔳 <b>Матн ё пайванд</b> фиристед — QR-код месозам.",
+        "stage_prepare": "Омода мекунам…",
+        "stage_process": "Коркард мекунам…",
+        "stage_send": "Мефиристам…",
+        "progress_frame": "⚙️ <b>{stage}</b>\n\n{bar}  <b>{pct}%</b>",
+        "result_caption": "🎁 Тайёр!",
+        "result_text": "📝 <b>Натиҷа:</b>",
+        "ready_again": "✨ Тайёр! Абзори навбатиро интихоб кунед — /menu",
+        "err_generic": "😕 Коркард нашуд. Файлро санҷед ва боз кӯшиш кунед.\n<code>{err}</code>",
+        "err_too_big_in": "⚠️ Файл аз <b>20 МБ</b> зиёд аст — Telegram ба ман иҷозаи боргирӣ намедиҳад. Хурдтарашро фиристед.",
+        "err_too_big_out": "⚠️ Натиҷа аз <b>50 МБ</b> зиёд аст — фиристода наметавонам. Фишурда кунед ё камтар файл.",
+        "err_wrong_type": "🤔 Навъи файл нодуруст аст. {hint}",
+        "err_no_files": "🤔 Шумо ҳанӯз чизе нафиристодед.",
+        "cleared": "🗑 Тоза шуд.",
         "help": (
-            "ℹ️ <b>Тарзи истифода</b>\n\n"
-            "1️⃣ Ба ман як ё якчанд расм фиристед 📸\n"
-            "2️⃣ Тугмаи <b>«✅ Тайёр»</b>-ро зер кунед\n"
-            "3️⃣ Архиви <b>.zip</b>-ро бо ҳамаи расмҳоятон гиред 🎁\n\n"
-            "Фармонҳо:\n"
-            "/start — аз нав оғоз кардан\n"
-            "/language — иваз кардани забон\n"
-            "/help — ин кӯмак"
+            "🧰 <b>FileBox</b> — устоди универсалии файлҳо.\n\n"
+            "Тарзи истифода:\n"
+            "1️⃣ Менюро кушоед — /menu\n"
+            "2️⃣ Категория ва абзорро интихоб кунед\n"
+            "3️⃣ Файл(ҳо)ро фиристед\n"
+            "4️⃣ Натиҷаро гиред 🎁\n\n"
+            "Фармонҳо: /menu · /language · /help\n"
+            "Маҳдудият: файли воридотӣ то 20 МБ, натиҷа то 50 МБ."
         ),
     },
 }
 
-# Every localized button label -> action name (language-independent routing).
-BUTTON_ACTIONS = {}
-for _lang, _d in TEXTS.items():
-    BUTTON_ACTIONS[_d["btn_done"]] = "done"
-    BUTTON_ACTIONS[_d["btn_clear"]] = "clear"
-    BUTTON_ACTIONS[_d["btn_lang"]] = "lang"
+# --------------------------------------------------------------------------- #
+# Category labels
+# --------------------------------------------------------------------------- #
+CATS = {
+    "pdf": {"ru": "📄 PDF", "en": "📄 PDF", "tg": "📄 PDF"},
+    "office": {"ru": "📝 Документы", "en": "📝 Documents", "tg": "📝 Ҳуҷҷатҳо"},
+    "image": {"ru": "🖼 Картинки", "en": "🖼 Images", "tg": "🖼 Расмҳо"},
+    "archive": {"ru": "🗜 Архивы", "en": "🗜 Archives", "tg": "🗜 Архивҳо"},
+    "utils": {"ru": "🔧 Утилиты", "en": "🔧 Utilities", "tg": "🔧 Абзорҳо"},
+    "media": {"ru": "🎬 Медиа", "en": "🎬 Media", "tg": "🎬 Медиа"},
+}
+
+# --------------------------------------------------------------------------- #
+# Operation labels
+# --------------------------------------------------------------------------- #
+OPS = {
+    "photos_to_pdf": {"ru": "🖼→📄 Фото в PDF", "en": "🖼→📄 Photos to PDF", "tg": "🖼→📄 Акс ба PDF"},
+    "pdf_to_images": {"ru": "📄→🖼 PDF в фото", "en": "📄→🖼 PDF to images", "tg": "📄→🖼 PDF ба акс"},
+    "merge_pdf": {"ru": "🔗 Объединить PDF", "en": "🔗 Merge PDF", "tg": "🔗 Муттаҳиди PDF"},
+    "split_pdf": {"ru": "✂️ Разделить PDF", "en": "✂️ Split PDF", "tg": "✂️ Ҷудо кардани PDF"},
+    "compress_pdf": {"ru": "🗜 Сжать PDF", "en": "🗜 Compress PDF", "tg": "🗜 Фишурдани PDF"},
+    "rotate_pdf": {"ru": "🔄 Повернуть PDF", "en": "🔄 Rotate PDF", "tg": "🔄 Гардондани PDF"},
+    "pdf_to_text": {"ru": "🔤 PDF в текст", "en": "🔤 PDF to text", "tg": "🔤 PDF ба матн"},
+    "office_to_pdf": {"ru": "📘 Office в PDF", "en": "📘 Office to PDF", "tg": "📘 Office ба PDF"},
+    "pdf_to_word": {"ru": "📄→📘 PDF в Word", "en": "📄→📘 PDF to Word", "tg": "📄→📘 PDF ба Word"},
+    "image_convert": {"ru": "🔄 Конвертировать", "en": "🔄 Convert format", "tg": "🔄 Табдил додан"},
+    "compress_image": {"ru": "🗜 Сжать фото", "en": "🗜 Compress image", "tg": "🗜 Фишурдани акс"},
+    "resize_image": {"ru": "📐 Изменить размер", "en": "📐 Resize", "tg": "📐 Тағйири андоза"},
+    "images_to_gif": {"ru": "🎞 Фото в GIF", "en": "🎞 Photos to GIF", "tg": "🎞 Акс ба GIF"},
+    "strip_exif": {"ru": "🧹 Убрать метаданные", "en": "🧹 Strip metadata", "tg": "🧹 Пок кардани EXIF"},
+    "remove_bg": {"ru": "🪄 Убрать фон", "en": "🪄 Remove background", "tg": "🪄 Хориҷи замина"},
+    "files_to_zip": {"ru": "📦 Файлы в ZIP", "en": "📦 Files to ZIP", "tg": "📦 Файлҳо ба ZIP"},
+    "unzip": {"ru": "📂 Распаковать ZIP", "en": "📂 Unzip", "tg": "📂 Кушодани ZIP"},
+    "text_to_qr": {"ru": "🔳 Текст в QR", "en": "🔳 Text to QR", "tg": "🔳 Матн ба QR"},
+    "qr_to_text": {"ru": "📷 QR в текст", "en": "📷 QR to text", "tg": "📷 QR ба матн"},
+    "ocr_image": {"ru": "👁 Текст с фото", "en": "👁 Image to text", "tg": "👁 Матн аз акс"},
+    "video_to_gif": {"ru": "🎥 Видео в GIF", "en": "🎥 Video to GIF", "tg": "🎥 Видео ба GIF"},
+    "video_to_audio": {"ru": "🔇 Видео в MP3", "en": "🔇 Video to MP3", "tg": "🔇 Видео ба MP3"},
+    "compress_video": {"ru": "🗜 Сжать видео", "en": "🗜 Compress video", "tg": "🗜 Фишурдани видео"},
+    "audio_convert": {"ru": "🎵 Конверт. аудио", "en": "🎵 Convert audio", "tg": "🎵 Табдили аудио"},
+}
 
 
+# --------------------------------------------------------------------------- #
+# helpers
+# --------------------------------------------------------------------------- #
 def t(lang, key, **kwargs):
-    """Return a translated string, falling back to English, then to the key."""
-    table = TEXTS.get(lang, TEXTS["en"])
-    text = table.get(key) or TEXTS["en"].get(key, key)
+    table = UI.get(lang, UI["en"])
+    text = table.get(key) or UI["en"].get(key, key)
     return text.format(**kwargs) if kwargs else text
 
 
+def cat_label(lang, cat):
+    return CATS.get(cat, {}).get(lang) or CATS.get(cat, {}).get("en", cat)
+
+
+def op_label(lang, op_id):
+    return OPS.get(op_id, {}).get(lang) or OPS.get(op_id, {}).get("en", op_id)
+
+
+def prompt_for(lang, input_kind):
+    return t(lang, f"prompt_{input_kind}")
+
+
 def detect_lang(code):
-    """Map a Telegram language_code to one of our supported languages."""
     if not code:
         return "en"
     code = code.lower()
