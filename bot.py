@@ -77,6 +77,33 @@ def reset_files(s):
 
 
 # --------------------------------------------------------------------------- #
+# Pretty animated progress bar
+# --------------------------------------------------------------------------- #
+PROGRESS_BLOCKS = 12
+
+
+def _bar(pct):
+    filled = int(round(pct / 100 * PROGRESS_BLOCKS))
+    filled = max(0, min(PROGRESS_BLOCKS, filled))
+    return "▰" * filled + "▱" * (PROGRESS_BLOCKS - filled)
+
+
+async def _progress(bot, chat_id, msg_id, lang, pct, stage_key):
+    text = t(lang, "packing_frame", stage=t(lang, stage_key), bar=_bar(pct), pct=pct)
+    try:
+        await bot.edit_message_text(text=text, chat_id=chat_id, message_id=msg_id)
+    except Exception:
+        pass
+
+
+async def _cleanup_prog(bot, chat_id, msg_id):
+    try:
+        await bot.delete_message(chat_id, msg_id)
+    except Exception:
+        pass
+
+
+# --------------------------------------------------------------------------- #
 # Keyboards
 # --------------------------------------------------------------------------- #
 def lang_inline():
@@ -217,7 +244,10 @@ async def do_done(message: Message, s):
         await message.answer(t(lang, "no_photos"), reply_markup=controls(lang))
         return
 
-    await message.answer(t(lang, "packing"))
+    bot = message.bot
+    chat_id = message.chat.id
+    count = s["count"]
+
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     zip_path = BASE_DIR / f"photos_{message.from_user.id}_{stamp}.zip"
 
@@ -228,19 +258,38 @@ async def do_done(message: Message, s):
                     zf.write(p, arcname=p.name)
         return zip_path.stat().st_size
 
+    # Beautiful animated progress while the archive is built in the background.
+    prog = await message.answer(
+        t(lang, "packing_frame", stage=t(lang, "stage_collect"), bar=_bar(0), pct=0)
+    )
+    zip_task = asyncio.create_task(asyncio.to_thread(_make_zip))
+    for pct, stage in ((25, "stage_collect"), (55, "stage_zip"), (80, "stage_zip")):
+        await asyncio.sleep(0.35)
+        await _progress(bot, chat_id, prog.message_id, lang, pct, stage)
+
     try:
-        size = await asyncio.to_thread(_make_zip)
+        size = await zip_task
     except Exception:
         logger.exception("Failed to build zip")
-        await message.answer(t(lang, "too_large"), reply_markup=controls(lang))
-        return
-
-    if size > MAX_ZIP_BYTES:
+        await _cleanup_prog(bot, chat_id, prog.message_id)
         await message.answer(t(lang, "too_large"), reply_markup=controls(lang))
         zip_path.unlink(missing_ok=True)
         return
 
-    count = s["count"]
+    if size > MAX_ZIP_BYTES:
+        await _cleanup_prog(bot, chat_id, prog.message_id)
+        await message.answer(t(lang, "too_large"), reply_markup=controls(lang))
+        zip_path.unlink(missing_ok=True)
+        return
+
+    await _progress(bot, chat_id, prog.message_id, lang, 95, "stage_send")
+    try:
+        await bot.send_chat_action(chat_id=chat_id, action="upload_document")
+    except Exception:
+        pass
+    await _progress(bot, chat_id, prog.message_id, lang, 100, "stage_send")
+    await asyncio.sleep(0.2)
+
     try:
         await message.answer_document(
             FSInputFile(zip_path, filename=zip_path.name),
@@ -249,6 +298,7 @@ async def do_done(message: Message, s):
     finally:
         zip_path.unlink(missing_ok=True)
         reset_files(s)
+        await _cleanup_prog(bot, chat_id, prog.message_id)
 
     await message.answer(t(lang, "ready_again"), reply_markup=controls(lang))
 
@@ -284,8 +334,19 @@ async def run_polling(bot: Bot):
         await web.TCPSite(runner, "0.0.0.0", int(port)).start()
         logger.info("Health server listening on :%s", port)
 
-    logger.info("Starting in POLLING mode")
-    await dp.start_polling(bot)
+    # On GitHub Actions we run for a bounded window, then hand off cleanly to the
+    # next queued run (avoids the 6h hard-kill and keeps the gap short).
+    run_seconds = int(os.environ.get("RUN_SECONDS", "0") or "0")
+    if run_seconds > 0:
+        logger.info("Starting POLLING for %s seconds, then graceful handoff", run_seconds)
+        poll_task = asyncio.create_task(dp.start_polling(bot, handle_signals=False))
+        await asyncio.sleep(run_seconds)
+        logger.info("RUN_SECONDS reached — stopping polling for the next shift")
+        await dp.stop_polling()
+        await poll_task
+    else:
+        logger.info("Starting in POLLING mode (no time limit)")
+        await dp.start_polling(bot)
 
 
 async def run_webhook(bot: Bot, webhook_url: str):

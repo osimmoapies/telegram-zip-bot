@@ -23,6 +23,10 @@ TEXTS = {
         "no_photos": "🤔 Ты ещё не отправил ни одной фотографии.\nПросто пришли мне фото 📸",
         "cleared": "🗑 Готово, всё очищено. Можешь начинать заново 📸",
         "packing": "📦 Упаковываю фотографии в архив…",
+        "packing_frame": "🗜 <b>{stage}</b>\n\n{bar}  <b>{pct}%</b>",
+        "stage_collect": "Собираю фотографии…",
+        "stage_zip": "Сжимаю в архив…",
+        "stage_send": "Отправляю тебе…",
         "done_caption": "🎁 Готово! Твой архив с <b>{n}</b> фото 📸",
         "ready_again": "✨ Можешь отправлять следующую пачку фото!",
         "too_large": (
@@ -61,6 +65,10 @@ TEXTS = {
         "no_photos": "🤔 You haven't sent any photos yet.\nJust send me a photo 📸",
         "cleared": "🗑 Done, everything is cleared. You can start again 📸",
         "packing": "📦 Packing your photos into an archive…",
+        "packing_frame": "🗜 <b>{stage}</b>\n\n{bar}  <b>{pct}%</b>",
+        "stage_collect": "Collecting photos…",
+        "stage_zip": "Compressing into archive…",
+        "stage_send": "Sending it to you…",
         "done_caption": "🎁 Done! Your archive with <b>{n}</b> photos 📸",
         "ready_again": "✨ You can send the next batch of photos!",
         "too_large": (
@@ -99,6 +107,10 @@ TEXTS = {
         "no_photos": "🤔 Шумо ҳанӯз ягон расм нафиристодед.\nФақат ба ман расм фиристед 📸",
         "cleared": "🗑 Тайёр, ҳамааш тоза шуд. Метавонед аз нав оғоз кунед 📸",
         "packing": "📦 Расмҳо бастабандӣ шуда истодаанд…",
+        "packing_frame": "🗜 <b>{stage}</b>\n\n{bar}  <b>{pct}%</b>",
+        "stage_collect": "Расмҳо ҷамъ шуда истодаанд…",
+        "stage_zip": "Ба архив фишурда истодаам…",
+        "stage_send": "Ба шумо фиристода истодаам…",
         "done_caption": "🎁 Тайёр! Архиви шумо бо <b>{n}</b> расм 📸",
         "ready_again": "✨ Метавонед дастаи навбатии расмҳоро фиристед!",
         "too_large": (
