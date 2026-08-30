@@ -32,6 +32,7 @@ from aiogram.types import (
 
 import converters as C
 import i18n
+import store
 from i18n import cat_label, detect_lang, op_label, prompt_for, t
 
 logging.basicConfig(
@@ -56,9 +57,10 @@ def is_free(user_id):
 CONV_TIMEOUT = 180                      # hard cap per conversion (seconds)
 CONCURRENCY = asyncio.Semaphore(3)      # max simultaneous heavy conversions
 MAX_PER_HOUR = 30                       # per-user conversions / hour (non-free)
-
-# Live stats for this run (resets on the ~6h handoff; DB makes it persistent).
-STATS = {"conversions": 0, "stars": 0, "by_op": {}, "started": time.time()}
+PACK_SIZE = int(os.environ.get("PACK_SIZE", "10") or "10")
+PACK_PRICE = int(os.environ.get("PACK_PRICE", "20") or "20")
+FRAUD_LIMIT = 10                        # block payments after this many refunds
+STARTED = time.time()
 
 IMG_EXT = {"jpg", "jpeg", "png", "webp", "bmp", "tiff", "tif", "gif", "heic", "heif"}
 OFFICE_EXT = {"doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp", "rtf", "txt", "csv"}
@@ -241,16 +243,17 @@ async def on_id(message: Message):
 async def on_stats(message: Message):
     if not is_free(message.from_user.id):
         return  # owner-only, silent for others
-    up = int(time.time() - STATS["started"])
-    top = sorted(STATS["by_op"].items(), key=lambda kv: -kv[1])[:8]
+    st = store.stats()
+    up = int(time.time() - STARTED)
+    top = sorted(st.get("by_op", {}).items(), key=lambda kv: -kv[1])[:8]
     rows = "\n".join(f"• {i18n.op_label('ru', k)}: <b>{v}</b>" for k, v in top) or "—"
+    scope = "всё время 💾" if store.ENABLED else "текущий запуск"
     await message.answer(
-        "📊 <b>Статистика (текущий запуск)</b>\n\n"
-        f"Обработок: <b>{STATS['conversions']}</b>\n"
-        f"Заработано: <b>{STATS['stars']} ⭐</b>\n"
-        f"Аптайм: {up // 3600}ч {up % 3600 // 60}м\n\n"
-        f"{rows}\n\n"
-        "<i>Сбрасывается при пересменке (~6ч). Постоянная — после подключения БД.</i>"
+        f"📊 <b>Статистика ({scope})</b>\n\n"
+        f"Обработок: <b>{st.get('conversions', 0)}</b>\n"
+        f"Заработано: <b>{st.get('stars', 0)} ⭐</b>\n"
+        f"Аптайм текущего запуска: {up // 3600}ч {up % 3600 // 60}м\n\n"
+        f"{rows}"
     )
 
 
@@ -270,8 +273,18 @@ async def gate_and_run(message: Message, s, user_id):
         return
     if is_free(user_id):
         await run_current(message, s)
-    else:
-        await request_payment(message, s)
+        return
+    # antifraud: too many refunds → block paid access
+    if store.refunds_of(user_id) >= FRAUD_LIMIT:
+        await message.answer(t(s["lang"], "err_fraud"))
+        return
+    # use a pre-paid pack credit if available
+    if store.use_credit(user_id):
+        asyncio.create_task(store.save())
+        await message.answer(t(s["lang"], "credit_used", credits=store.credits_of(user_id)))
+        await run_current(message, s)
+        return
+    await request_payment(message, s)
 
 
 async def request_payment(message: Message, s):
@@ -280,9 +293,33 @@ async def request_payment(message: Message, s):
     await message.answer_invoice(
         title=t(lang, "pay_title"),
         description=t(lang, "pay_desc", stars=PRICE_STARS),
-        payload=f"filebox:{s.get('op')}",
+        payload=f"filebox:one:{s.get('op')}",
         currency="XTR",
         prices=[LabeledPrice(label=t(lang, "pay_label"), amount=PRICE_STARS)],
+        provider_token="",
+    )
+    # offer a discounted pack of conversions
+    await message.answer(
+        t(lang, "pack_offer", n=PACK_SIZE, price=PACK_PRICE),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
+            InlineKeyboardButton(
+                text=t(lang, "pack_button", n=PACK_SIZE, price=PACK_PRICE),
+                callback_data="buypack",
+            )
+        ]]),
+    )
+
+
+@dp.callback_query(F.data == "buypack")
+async def cb_buypack(cb: CallbackQuery):
+    s = get_session(cb.from_user.id)
+    await cb.answer()
+    await cb.message.answer_invoice(
+        title=t(s["lang"], "pack_title"),
+        description=t(s["lang"], "pack_desc", n=PACK_SIZE, price=PACK_PRICE),
+        payload="filebox:pack",
+        currency="XTR",
+        prices=[LabeledPrice(label=t(s["lang"], "pack_label", n=PACK_SIZE), amount=PACK_PRICE)],
         provider_token="",
     )
 
@@ -292,31 +329,50 @@ async def on_pre_checkout(q: PreCheckoutQuery):
     await q.answer(ok=True)
 
 
+async def _refund(message: Message, sp):
+    try:
+        await message.bot.refund_star_payment(
+            user_id=message.from_user.id,
+            telegram_payment_charge_id=sp.telegram_payment_charge_id,
+        )
+    except Exception:
+        logger.exception("refund failed")
+
+
 @dp.message(F.successful_payment)
 async def on_paid(message: Message):
     s = get_session(message.from_user.id, detect_lang(message.from_user.language_code))
     lang = s["lang"]
+    uid = message.from_user.id
     sp = message.successful_payment
-    paid_op = (sp.invoice_payload or "").split(":", 1)[-1]
+    parts = (sp.invoice_payload or "").split(":")
+    kind = parts[1] if len(parts) > 1 else ""
+
+    if kind == "pack":
+        store.add_credits(uid, PACK_SIZE)
+        if store.ENABLED and not await store.save():
+            store.add_credits(uid, -PACK_SIZE)  # couldn't persist → undo and refund
+            await _refund(message, sp)
+            await message.answer(t(lang, "pay_refunded"))
+            return
+        store.record_payment(uid, "pack", PACK_PRICE)
+        store.add_stars(PACK_PRICE)
+        await message.answer(t(lang, "pack_added", n=PACK_SIZE, credits=store.credits_of(uid)))
+        return
+
+    # single conversion — the paid job must still be the active one
+    paid_op = parts[2] if len(parts) > 2 else ""
     op = C.OP_BY_ID.get(paid_op)
-    # The paid job must still be the active one (user may have navigated away).
-    valid = (
-        op is not None
-        and s.get("op") == paid_op
-        and (s["files"] or op["input"] in C.TEXT_INPUTS)
-    )
+    valid = op is not None and s.get("op") == paid_op and (s["files"] or op["input"] in C.TEXT_INPUTS)
     if not valid:
-        # Honestly refund — they paid but the job is gone / changed.
-        try:
-            await message.bot.refund_star_payment(
-                user_id=message.from_user.id,
-                telegram_payment_charge_id=sp.telegram_payment_charge_id,
-            )
-        except Exception:
-            logger.exception("refund failed")
+        await _refund(message, sp)
+        store.bump_refund(uid)
+        asyncio.create_task(store.save())
         await message.answer(t(lang, "pay_refunded"))
         return
-    STATS["stars"] += PRICE_STARS
+    store.record_payment(uid, "one", PRICE_STARS, paid_op)
+    store.add_stars(PRICE_STARS)
+    asyncio.create_task(store.save())
     await message.answer(t(lang, "pay_thanks"))
     await run_current(message, s)
 
@@ -737,8 +793,7 @@ async def _do_conversion(message: Message, s, op):
     if sent == 0:
         await message.answer(t(lang, "err_generic"))
     else:
-        STATS["conversions"] += 1
-        STATS["by_op"][op["id"]] = STATS["by_op"].get(op["id"], 0) + 1
+        store.bump_stat(op["id"])
     reset_job(s)
     s["view"] = "menu"
     await message.answer(t(lang, "ready_again"), reply_markup=kb_menu(lang))
@@ -813,6 +868,8 @@ async def run_polling(bot: Bot):
         await web.TCPSite(runner, "0.0.0.0", int(port)).start()
         logger.info("Health server on :%s", port)
 
+    asyncio.create_task(store.periodic_saver())
+
     run_seconds = int(os.environ.get("RUN_SECONDS", "0") or "0")
     if run_seconds > 0:
         logger.info("POLLING for %ss then graceful handoff", run_seconds)
@@ -821,6 +878,7 @@ async def run_polling(bot: Bot):
         logger.info("RUN_SECONDS reached — stopping for next shift")
         await dp.stop_polling()
         await poll_task
+        await store.save()  # persist final state before handoff
     else:
         logger.info("POLLING (no time limit)")
         await dp.start_polling(bot)
@@ -851,6 +909,7 @@ async def main():
     if not BOT_TOKEN:
         raise SystemExit("BOT_TOKEN is not set. Get one from @BotFather.")
     BASE_DIR.mkdir(parents=True, exist_ok=True)
+    await store.load()
     bot = Bot(BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     await _set_commands(bot)
     webhook_url = os.environ.get("WEBHOOK_URL") or os.environ.get("RENDER_EXTERNAL_URL")

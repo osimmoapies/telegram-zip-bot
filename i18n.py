@@ -56,6 +56,14 @@ UI = {
         "pay_desc": "Оплата {stars} ⭐ за одну обработку файла.",
         "pay_label": "1 обработка",
         "pay_thanks": "✅ Оплата получена, спасибо! Обрабатываю…",
+        "pack_offer": "💡 Часто пользуешься? Пакет выгоднее:",
+        "pack_button": "🎟 {n} обработок за {price} ⭐",
+        "pack_title": "FileBox — пакет обработок",
+        "pack_desc": "{n} обработок за {price} ⭐.",
+        "pack_label": "{n} обработок",
+        "pack_added": "🎟 +{n} обработок зачислено! На балансе: <b>{credits}</b>. Просто пришли файл 🎁",
+        "credit_used": "🎟 Списана 1 обработка из пакета. Остаток: <b>{credits}</b>.",
+        "err_fraud": "🚫 Слишком много возвратов — оплата временно недоступна.",
         "help": (
             "🧰 <b>FileBox</b> — универсальный файловый мастер.\n\n"
             "Как пользоваться:\n"
@@ -117,6 +125,14 @@ UI = {
         "pay_desc": "Pay {stars} ⭐ for one file processing.",
         "pay_label": "1 processing",
         "pay_thanks": "✅ Payment received, thanks! Processing…",
+        "pack_offer": "💡 Use it often? A pack is cheaper:",
+        "pack_button": "🎟 {n} conversions for {price} ⭐",
+        "pack_title": "FileBox — conversion pack",
+        "pack_desc": "{n} conversions for {price} ⭐.",
+        "pack_label": "{n} conversions",
+        "pack_added": "🎟 +{n} conversions added! Balance: <b>{credits}</b>. Just send a file 🎁",
+        "credit_used": "🎟 Used 1 conversion from your pack. Left: <b>{credits}</b>.",
+        "err_fraud": "🚫 Too many refunds — payments are temporarily unavailable.",
         "help": (
             "🧰 <b>FileBox</b> — your universal file master.\n\n"
             "How to use:\n"
@@ -178,6 +194,14 @@ UI = {
         "pay_desc": "Пардохти {stars} ⭐ барои як коркард.",
         "pay_label": "1 коркард",
         "pay_thanks": "✅ Пардохт қабул шуд, ташаккур! Коркард мекунам…",
+        "pack_offer": "💡 Тез-тез истифода мебаред? Баста арзонтар аст:",
+        "pack_button": "🎟 {n} коркард ба {price} ⭐",
+        "pack_title": "FileBox — бастаи коркард",
+        "pack_desc": "{n} коркард ба {price} ⭐.",
+        "pack_label": "{n} коркард",
+        "pack_added": "🎟 +{n} коркард илова шуд! Дар баланс: <b>{credits}</b>. Танҳо файл фиристед 🎁",
+        "credit_used": "🎟 1 коркард аз баста истифода шуд. Боқӣ: <b>{credits}</b>.",
+        "err_fraud": "🚫 Хеле зиёд баргардонида шуд — пардохт муваққатан дастнорас аст.",
         "help": (
             "🧰 <b>FileBox</b> — устоди универсалии файлҳо.\n\n"
             "Тарзи истифода:\n"
@@ -239,6 +263,14 @@ UI = {
         "pay_desc": "Bitta fayl ishlovi uchun {stars} ⭐ to'lov.",
         "pay_label": "1 ishlov",
         "pay_thanks": "✅ To'lov qabul qilindi, rahmat! Ishlayapman…",
+        "pack_offer": "💡 Tez-tez ishlatasizmi? Paket arzonroq:",
+        "pack_button": "🎟 {n} ishlov {price} ⭐ ga",
+        "pack_title": "FileBox — ishlov paketi",
+        "pack_desc": "{n} ishlov {price} ⭐ ga.",
+        "pack_label": "{n} ishlov",
+        "pack_added": "🎟 +{n} ishlov qo'shildi! Balans: <b>{credits}</b>. Shunchaki fayl yuboring 🎁",
+        "credit_used": "🎟 Paketdan 1 ishlov ishlatildi. Qoldi: <b>{credits}</b>.",
+        "err_fraud": "🚫 Juda ko'p qaytarish — to'lov vaqtincha mavjud emas.",
         "help": (
             "🧰 <b>FileBox</b> — universal fayl ustasi.\n\n"
             "Qanday ishlatish:\n"

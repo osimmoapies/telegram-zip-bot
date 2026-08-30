@@ -47,5 +47,9 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           FREE_IDS: ${{ vars.FREE_IDS }}
           PRICE_STARS: "3"
+          PACK_SIZE: "10"
+          PACK_PRICE: "20"
+          GIST_ID: ${{ vars.GIST_ID }}
+          GH_GIST_TOKEN: ${{ secrets.GH_GIST_TOKEN }}
           RUN_SECONDS: "20700"
         run: python bot.py
